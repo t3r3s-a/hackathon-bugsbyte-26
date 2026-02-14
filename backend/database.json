@@ -95,6 +95,27 @@
                 "quem_cozinha_outro": "gustavo",
                 "come_na_cantina": "sim"
             }
+        },
+        {
+            "username": "nigger",
+            "email": "nigg@nigg.com",
+            "password": "nigg",
+            "questionnaire": {
+                "username": "nigger",
+                "idade": 67,
+                "peso": 69.0,
+                "altura": 2.0,
+                "sexo": "Masculino",
+                "faz_desporto": "nao",
+                "frequencia_desporto": 0,
+                "brinca_na_rua": "nao",
+                "alergias": [
+                    "amendoim"
+                ],
+                "quem_cozinha": "outros",
+                "quem_cozinha_outro": "mulher",
+                "come_na_cantina": "sim"
+            }
         }
     ]
 }
