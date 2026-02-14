@@ -64,7 +64,7 @@ const dicaDoDia = dicas[Math.floor(Math.random() * dicas.length)];
             <div class="card-footer">Falar agora →</div>
           </button>
 
-          <button @click="alert('Jogo Snack-e em breve!')" class="choice-card game-card">
+          <button @click="router.push('/snake-game')" class="choice-card game-card">
             <div class="icon-bg">🐍</div>
             <h3>Snack-e Game</h3>
             <p>Diverte-te e queima calorias!</p>
