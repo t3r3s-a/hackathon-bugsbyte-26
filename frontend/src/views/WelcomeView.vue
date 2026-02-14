@@ -41,7 +41,11 @@ const irParaChat = () => router.push('/chat'); // Confirma se tens esta rota
 
 <template>
   <div class="view-wrapper">
-    <div class="card selection-card">
+    <div class="decor-blob blob-1"></div>
+    <div class="decor-blob blob-2"></div>
+    <div class="decor-blob blob-3"></div>
+
+    <div class="dashboard-container">
       <header class="welcome-header">
         <h1 class="brand">Olá, <span class="snake-text">{{ usuario }}</span>!</h1>
         <p>O teu perfil nutricional foi analisado. O que queres explorar agora?</p>
@@ -76,6 +80,7 @@ const irParaChat = () => router.push('/chat'); // Confirma se tens esta rota
             <p>Aprende sobre alimentos e diverte-te!</p>
             <span class="btn-label">Jogar Agora</span>
           </button>
+        </div>
 
           <button @click="irParaChat" class="choice-card ai-card">
             <div class="icon-circle">🤖</div>
@@ -95,12 +100,23 @@ const irParaChat = () => router.push('/chat'); // Confirma se tens esta rota
 /* Mantive o teu estilo base e melhorei as transições */
 .view-wrapper {
   display: flex; align-items: center; justify-content: center;
-  min-height: 100vh; background: #f8fafc; padding: 20px;
+  min-height: 100vh; background: #f8fafc; padding: 30px;
+  position: relative; overflow: hidden; font-family: 'Inter', sans-serif;
 }
-.selection-card {
-  max-width: 650px; width: 100%; background: white;
-  padding: 40px; border-radius: 40px; text-align: center;
-  box-shadow: 0 30px 60px rgba(0,0,0,0.06);
+
+/* Blobs de Fundo */
+.decor-blob { position: absolute; border-radius: 50%; filter: blur(80px); z-index: 0; opacity: 0.4; animation: move 20s infinite alternate; }
+.blob-1 { width: 500px; height: 500px; background: #dcfce7; top: -100px; left: -100px; }
+.blob-2 { width: 400px; height: 400px; background: #47baac33; bottom: -50px; right: -50px; animation-delay: -5s; }
+.blob-3 { width: 300px; height: 300px; background: #fef9c3; top: 20%; right: 10%; }
+
+@keyframes move { from { transform: translate(0, 0); } to { transform: translate(40px, 60px); } }
+
+.dashboard-container {
+  width: 100%; max-width: 800px; position: relative; z-index: 1;
+  background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(15px);
+  padding: 50px; border-radius: 40px; border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 25px 50px rgba(0,0,0,0.05);
 }
 .welcome-header h1 { font-size: 30px; font-weight: 800; margin-bottom: 10px; }
 .welcome-header p { color: #64748b; margin-bottom: 35px; }
@@ -112,13 +128,18 @@ const irParaChat = () => router.push('/chat'); // Confirma se tens esta rota
   -webkit-text-fill-color: transparent; 
 }
 
-.options-container { display: flex; flex-direction: column; gap: 20px; }
+.welcome-header { text-align: center; margin-bottom: 40px; }
+.brand-logo { height: 45px; margin-bottom: 20px; }
+.title { font-size: 2.2rem; font-weight: 800; color: #1e293b; margin-bottom: 10px; }
+.highlight { color: #47baac; }
+.subtitle { color: #64748b; font-size: 1.1rem; }
 
 .plan-hero-btn {
   display: flex; align-items: center; justify-content: space-between;
   padding: 25px; border-radius: 24px; border: none;
   background: #2d3436; color: white; cursor: pointer;
   transition: all 0.3s ease; text-align: left;
+  background: linear-gradient(135deg, #47baac 0%, #3a968a 100%); color: white;
 }
 .plan-hero-btn:hover {
   background: #27ae60; transform: translateY(-3px);
@@ -128,13 +149,16 @@ const irParaChat = () => router.push('/chat'); // Confirma se tens esta rota
 .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 
 .choice-card {
-  padding: 25px; border-radius: 24px; border: 2px solid #f1f5f9;
-  background: white; cursor: pointer; transition: all 0.3s ease;
-  display: flex; flex-direction: column; align-items: center;
+  background: white; border: 1.5px solid #f1f5f9; padding: 30px;
+  border-radius: 28px; cursor: pointer; transition: all 0.3s ease;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
 }
-.choice-card:hover {
-  transform: translateY(-5px); border-color: #27ae60;
-  box-shadow: 0 15px 30px rgba(0,0,0,0.05);
+.choice-card:hover { transform: translateY(-5px); border-color: #47baac; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+
+.icon-bg {
+  width: 70px; height: 70px; background: #f0fdf4; border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 35px; margin-bottom: 20px;
 }
 
 .icon-circle {
@@ -150,5 +174,9 @@ const irParaChat = () => router.push('/chat'); // Confirma se tens esta rota
   font-size: 14px; cursor: pointer; text-decoration: underline;
 }
 
-@media (max-width: 500px) { .options-grid { grid-template-columns: 1fr; } }
+@media (max-width: 650px) {
+  .sub-grid { grid-template-columns: 1fr; }
+  .dashboard-container { padding: 30px; }
+  .title { font-size: 1.8rem; }
+}
 </style>

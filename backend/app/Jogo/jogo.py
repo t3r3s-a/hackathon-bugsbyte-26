@@ -2,10 +2,10 @@ import pygame
 import random
 import os
 import sys
+import importlib
 
 from constantes import *
-from alimento import alimentos
-
+import desenho
 
 class SnakeGame:
     def __init__(self):
@@ -13,18 +13,38 @@ class SnakeGame:
         self.largura = LARGURA_JANELA
         self.altura = ALTURA_JANELA
         self.display = pygame.display.set_mode((self.largura, self.altura))
-        pygame.display.set_caption('Snake Game - Calorias')
+        pygame.display.set_caption('Nutrium Snack-e')
         self.clock = pygame.time.Clock()
         
-        self.font_score = pygame.font.Font(None, 30)
-        self.font_alimento = pygame.font.Font(None, 50)
-        self.font_fase = pygame.font.Font(None, 25)
-        self.font_calorias = pygame.font.Font(None, 25)
-        self.font_transicao = pygame.font.Font(None, 48)
+        # Fontes corrigidas e alinhadas
+        self.font_score = pygame.font.SysFont("Arial", 26, bold=True)
+        self.font_alimento = pygame.font.SysFont("Arial", 40)
+        self.font_fase = pygame.font.SysFont("Arial", 18)
+        self.font_calorias = pygame.font.SysFont("Arial", 18, bold=True)
+        self.font_transicao = pygame.font.SysFont("Arial", 30, bold=True)
 
         self.caminho_base = os.path.dirname(__file__)
         
-        self.fase_selecionada = 0  # Índice da fase escolhida no menu de transição
+        # Pré-carrega a imagem da cabeça da cobra (rodada)
+        try:
+            caminho_cabeca = os.path.join(self.caminho_base, "assets", "cabeca_snake.png")
+            img_cabeca = pygame.image.load(caminho_cabeca).convert_alpha()
+            self.img_cabeca_original = img_cabeca
+        except:
+            self.img_cabeca_original = None
+
+        # Para cache do alimento
+        self.imagem_alimento_cache = None
+        self.nome_alimento_cache = None
+
+        # Lista ordenada das fases (refeições)
+        self.ordem_refeicoes = ['fase1', 'fase2', 'fase3', 'fase4', 'fase5']
+        self.indice_refeicao_atual = 0
+        
+        self.minijogos = ['corrida', 'equilibrio', 'dinossauro']
+        
+        self.tempo_ultima_queima = pygame.time.get_ticks()
+        
         self.reset_jogo()
         
     def calcular_offset_grid(self):
@@ -48,7 +68,7 @@ class SnakeGame:
     def reset_jogo(self):
         self.direcao = Direcao.DIREITA
         self.fase_atual = 'fase1'
-        self.fase_selecionada = 0
+        self.indice_refeicao_atual = 0
         self.calcular_offset_grid()
         
         col_centro = self.grid_cols // 2
@@ -64,12 +84,16 @@ class SnakeGame:
         self.pontuacao = 0
         self.calorias = CALORIAS_INICIAL
         self.contador_frames_fase = 0
-        self.em_transicao = False
+        self.estado = "jogando"  # "jogando", "menu", "dormir"
+        self.opcoes_menu = []
+        self.opcao_selecionada = 0
         self.colocar_alimento()
         
     def colocar_alimento(self):
         tentativas = 0
         max_tentativas = 1000
+        nomes_fase = FUNDOS[self.fase_atual]['alimentos_nomes']
+    
         while tentativas < max_tentativas:
             col = random.randint(0, self.grid_cols - 1)
             row = random.randint(0, self.grid_rows - 1)
@@ -77,36 +101,36 @@ class SnakeGame:
             y = self.grid_offset_y + row * self.tamanho_celula
             if [x, y] not in self.cobra:
                 self.alimento_pos = [x, y]
-                self.alimento_atual = random.choice(alimentos)
-
+                nome_escolhido = random.choice(nomes_fase)
+                self.alimento_atual = ALIMENTOS_DICT[nome_escolhido]
+    
+                # --- Carregar a imagem ---
                 nome_img = self.alimento_atual["nome"] + ".png"
                 self.caminho_imagem_alimento = os.path.join(
                     self.caminho_base, "assets", nome_img
                 )
-
+                try:
+                    img_orig = pygame.image.load(self.caminho_imagem_alimento).convert_alpha()
+                    # Redimensiona para o tamanho da célula atual e guarda em cache
+                    self.imagem_alimento_cache = pygame.transform.smoothscale(
+                        img_orig, (self.tamanho_celula, self.tamanho_celula)
+                    )
+                    self.nome_alimento_cache = self.alimento_atual["nome"]
+                except Exception as e:
+                    print(f"Erro ao carregar imagem {self.caminho_imagem_alimento}: {e}")
+                    self.imagem_alimento_cache = None
+                # ---------------------------------
                 return
             tentativas += 1
         self.game_over()
         
     def mudar_para_fase(self, indice):
-        """Muda para a fase correspondente ao índice fornecido."""
-        # minijogo entre fase1 e fase2
-        if self.fase_atual == "fase1":
-            venceu = self.minigame_corrida()
-            if not venceu:
-                if self.game_over():
-                    self.reset_jogo()
-                else:
-                    pygame.quit()
-                    sys.exit()
-                return
-
-        fases = list(FUNDOS.keys())
-        self.fase_atual = fases[indice]
+        """Muda para a fase correspondente ao índice na ordem."""
+        self.fase_atual = self.ordem_refeicoes[indice]
+        self.indice_refeicao_atual = indice
         self.calcular_offset_grid()
         self.contador_frames_fase = 0
         
-        # Posiciona a cobra no centro com base nas calorias atuais
         col_centro = self.grid_cols // 2
         row_centro = self.grid_rows // 2
         x = self.grid_offset_x + col_centro * self.tamanho_celula
@@ -118,103 +142,81 @@ class SnakeGame:
         self.direcao = Direcao.DIREITA
         
         self.colocar_alimento()
-        self.colocar_fruta()
-        self.em_transicao = False
-    
-    # (Opcional) Manter o método antigo por compatibilidade, mas não será usado
-    def mudar_fase(self):
-        fases = list(FUNDOS.keys())
-        indice_atual = fases.index(self.fase_atual)
-        proximo_indice = (indice_atual + 1) % len(fases)
-        self.mudar_para_fase(proximo_indice)
-            
-    def desenhar_fundo(self):
-        fundo = FUNDOS[self.fase_atual]
-        pygame.draw.rect(self.display, PRETO, (0, 0, self.largura, HUD_ALTURA))
-        rect_jogo = pygame.Rect(0, HUD_ALTURA, self.largura, self.altura - HUD_ALTURA)
-        pygame.draw.rect(self.display, fundo['cor_principal'], rect_jogo)
-        
-        for col in range(self.grid_cols):
-            for row in range(self.grid_rows):
-                x = self.grid_offset_x + col * self.tamanho_celula
-                y = self.grid_offset_y + row * self.tamanho_celula
-                pygame.draw.rect(self.display, fundo['cor_grade'],
-                                 (x, y, self.tamanho_celula, self.tamanho_celula), 1)
-        
-        pygame.draw.line(self.display, BRANCO, (0, HUD_ALTURA), (self.largura, HUD_ALTURA), 2)
-    
-    def desenhar_cobra(self):
-        for i, seg in enumerate(self.cobra):
-            cor = VERDE_ESCURO if i == 0 else VERDE
-            pygame.draw.rect(self.display, cor,
-                             (seg[0], seg[1], self.tamanho_celula, self.tamanho_celula))
-            if i != 0:
-                pygame.draw.rect(self.display, cor,
-                                 (seg[0], seg[1], self.tamanho_celula, self.tamanho_celula), 2)
-    
-    def desenhar_alimento(self):
-        imagem_original = pygame.image.load(self.caminho_imagem_alimento).convert_alpha()
-        imagem = pygame.transform.scale(
-            imagem_original,
-            (self.tamanho_celula, self.tamanho_celula)
-        )
-        self.display.blit(imagem, (self.alimento_pos[0], self.alimento_pos[1]))
-    
-    def desenhar_hud(self):
-        self.display.blit(self.font_score.render(f'energia_kcal: {self.pontuacao}', True, BRANCO), (10, 5))
-        fase_info = FUNDOS[self.fase_atual]
-        self.display.blit(self.font_fase.render(f'Fase: {fase_info["nome"]}', True, BRANCO), (10, 30))
-        self.display.blit(self.font_fase.render(
-            f'{self.alimento_atual["nome"]} (+{self.alimento_atual["energia_kcal"]})',
-            True, BRANCO), (self.largura - 250, 5))
-        
-        frames_restantes = int(fase_info['duracao'] * VELOCIDADE) - self.contador_frames_fase
-        segundos_restantes = max(0, frames_restantes // VELOCIDADE)
-        texto_tempo = self.font_fase.render(f'Tempo: {segundos_restantes}s', True, BRANCO)
-        self.display.blit(texto_tempo, (self.largura - 180, 30))
-        
-        texto_grid = self.font_fase.render(f'Grade: {self.grid_cols}x{self.grid_rows}', True, BRANCO)
-        self.display.blit(texto_grid, (self.largura - 180, 55))
-        
-        texto_celula = self.font_fase.render(f'Célula: {self.tamanho_celula}px', True, BRANCO)
-        self.display.blit(texto_celula, (self.largura - 180, 80))
-        
-        largura_barra = 300
-        altura_barra = 20
-        x_barra = self.largura // 2 - largura_barra // 2
-        y_barra = 5
-        pygame.draw.rect(self.display, CINZA, (x_barra, y_barra, largura_barra, altura_barra))
-        proporcao = max(0, min(1, self.calorias / CALORIAS_MAX))
-        largura_preenchida = int(largura_barra * proporcao)
-        if largura_preenchida > 0:
-            cor_barra = VERDE if self.calorias < CALORIAS_MAX * 0.8 else LARANJA
-            pygame.draw.rect(self.display, cor_barra, (x_barra, y_barra, largura_preenchida, altura_barra))
-        pygame.draw.rect(self.display, BRANCO, (x_barra, y_barra, largura_barra, altura_barra), 2)
-        self.display.blit(self.font_calorias.render(f'{int(self.calorias)}/{CALORIAS_MAX}', True, BRANCO),
-                         (x_barra + largura_barra + 10, y_barra))
-    
-    def desenhar_transicao(self):
-        """Desenha o menu de escolha de fase."""
-        overlay = pygame.Surface((self.largura, self.altura), pygame.SRCALPHA)
-        overlay.fill((0, 0, 0, 180))
-        self.display.blit(overlay, (0, 0))
-        
-        fases = list(FUNDOS.keys())
-        titulo = self.font_transicao.render("Escolha a próxima fase:", True, BRANCO)
-        self.display.blit(titulo, (self.largura//2 - titulo.get_width()//2, self.altura//2 - 150))
-        
-        # Desenha as opções
-        y = self.altura // 2 - 50
-        for i, fase_key in enumerate(fases):
-            cor = VERDE if i == self.fase_selecionada else BRANCO
-            texto = self.font_fase.render(f"{i+1}. {FUNDOS[fase_key]['nome']}", True, cor)
-            self.display.blit(texto, (self.largura//2 - texto.get_width()//2, y))
-            y += 40
-        
-        instrucoes = self.font_fase.render("Use as setas ↑ ↓ para navegar, Enter para confirmar", True, BRANCO)
-        self.display.blit(instrucoes, (self.largura//2 - instrucoes.get_width()//2, self.altura//2 + 100))
-    
+        self.estado = "jogando"
+
+    def preparar_menu_transicao(self):
+        """Configura as opções do menu baseado na fase atual."""
+        self.opcoes_menu = []
+        if self.indice_refeicao_atual < len(self.ordem_refeicoes) - 1:
+            proxima_refeicao = self.ordem_refeicoes[self.indice_refeicao_atual + 1]
+            nome_proxima = FUNDOS[proxima_refeicao]['nome']
+            self.opcoes_menu.append(("Treino", "treino", None))
+            self.opcoes_menu.append((nome_proxima, "fase", self.indice_refeicao_atual + 1))
+        else:
+            self.opcoes_menu.append(("Dormir", "dormir", None))
+        self.opcao_selecionada = 0
+        self.estado = "menu"
+
+    def executar_treino(self):
+        minijogo = random.choice(self.minijogos)
+        nome_funcao = f"minigame_{minijogo}"
+        try:
+            modulo = importlib.import_module(f"MiniJogos.{minijogo}")
+            funcao = getattr(modulo, nome_funcao)
+        except (ModuleNotFoundError, AttributeError) as e:
+            print(f"Erro ao carregar minijogo {minijogo}: {e}")
+            return False
+
+        resultado = funcao(self.calorias)
+
+        # Recria a superfície principal com as dimensões originais
+        self.display = pygame.display.set_mode((self.largura, self.altura))
+        pygame.display.set_caption('Snake Game - Calorias')
+
+        if resultado == -1:
+            pygame.quit()
+            sys.exit()
+
+        if resultado == 0:
+            # Perdeu: aplica penalidade e remove a opção de treino do menu
+            self.calorias -= 50
+            if self.calorias < CALORIAS_MIN:
+                self.calorias = CALORIAS_MIN
+            self.ajustar_tamanho()
+            if self.calorias <= CALORIAS_MIN:
+                if self.game_over():
+                    self.reset_jogo()
+                else:
+                    pygame.quit()
+                    sys.exit()
+
+            # Remove a opção "Treino" do menu, deixando apenas a próxima refeição
+            if len(self.opcoes_menu) > 1 and self.opcoes_menu[0][1] == "treino":
+                self.opcoes_menu.pop(0)  # remove o treino
+            return False
+        else:
+            # Ganhou: queima calorias e avança
+            self.calorias -= resultado
+            if self.calorias < CALORIAS_MIN:
+                self.calorias = CALORIAS_MIN
+            self.ajustar_tamanho()
+            if self.calorias <= CALORIAS_MIN:
+                if self.game_over():
+                    self.reset_jogo()
+                else:
+                    #pygame.quit()
+                    sys.exit()
+            return True
+
+    def mostrar_tela_dormir(self):
+        self.estado = "dormir"
+        self.opcoes_menu = [("Acordar", "acordar", None), ("Sair", "sair", None)]
+        self.opcao_selecionada = 0
+
     def mover_cobra(self):
+        if hasattr(self, 'proxima_direcao'):
+            self.direcao = self.proxima_direcao
+            del self.proxima_direcao
         cabeca = self.cobra[0].copy()
         if self.direcao == Direcao.DIREITA:
             cabeca[0] += self.tamanho_celula
@@ -246,124 +248,83 @@ class SnakeGame:
             self.cobra.pop()
     
     def game_over(self):
-        self.display.fill(PRETO)
+        # Cores atualizadas para o novo tema
+        COR_BG = (24, 24, 27)
+        COR_LARANJA = (249, 115, 22)
+        COR_BRANCO = (250, 250, 249)
+
+        self.display.fill(COR_BG)
         textos = [
-            self.font_score.render('GAME OVER!', True, VERMELHO),
-            self.font_score.render(f'Pontuação Final: {self.pontuacao}', True, BRANCO),
-            self.font_score.render(f'Calorias: {int(self.calorias)}', True, BRANCO),
-            self.font_fase.render('Pressione ESPAÇO para jogar novamente', True, BRANCO)
+            self.font_transicao.render('GAME OVER!', True, (239, 68, 68)), # Vermelho
+            self.font_score.render(f'Pontuação Final: {self.pontuacao}', True, COR_LARANJA),
+            self.font_score.render(f'Calorias: {int(self.calorias)}', True, COR_BRANCO),
+            self.font_fase.render('Pressione ESPAÇO para jogar novamente', True, (148, 163, 184))
         ]
         y = self.altura // 2 - 80
         for texto in textos:
             self.display.blit(texto, (self.largura//2 - texto.get_width()//2, y))
-            y += 40
+            y += 50
         pygame.display.flip()
         
-        esperando = True
-        while esperando:
+        while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     return False
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                    esperando = False
                     return True
-        return True
-
-    # ============================
-    # MINIJOGO Q/E
-    # ============================
-    def minigame_corrida(self):
-        WIDTH, HEIGHT = self.largura, self.altura
-        janela = pygame.display.set_mode((WIDTH, HEIGHT))
-        pygame.display.set_caption("Running Minigame")
-
-        player_x = 50
-        player_y = HEIGHT // 2 - 25
-        player_speed = 10
-        goal_x = WIDTH - 100
-
-        last_key = None
-        total_time = 10
-        clock = pygame.time.Clock()
-
-        running = True
-        while running:
-            dt = clock.tick(60) / 1000
-            total_time -= dt
-
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-
-                if event.type == pygame.KEYDOWN:
-                    if total_time > 0:
-                        if event.key == pygame.K_q and last_key != 'q':
-                            player_x += player_speed
-                            last_key = 'q'
-                        if event.key == pygame.K_e and last_key != 'e':
-                            player_x += player_speed
-                            last_key = 'e'
-
-            if player_x >= goal_x:
-                self.calorias -= random.randint(200, 600)
-                return True
-
-            if total_time <= 0:
-                return False
-
-            janela.fill((221, 90, 17))
-            pygame.draw.rect(janela, (255, 255, 255), (goal_x, player_y - 150, 50, 400)) #meta
-            pygame.draw.rect(janela, (255, 255, 255), (0, player_y - 140, 900, 5))
-            pygame.draw.rect(janela, (255, 255, 255), (0, player_y - 75, 900, 5))
-            pygame.draw.rect(janela, (255, 255, 255), (0, player_y - 10, 900, 5))
-            pygame.draw.rect(janela, (255, 255, 255), (0, player_y + 55, 900, 5))
-            pygame.draw.rect(janela, (255, 255, 255), (0,  player_y + 120, 900, 5))
-            pygame.draw.rect(janela, (255, 255, 255), (0,  player_y + 185, 900, 5))
-            pygame.draw.rect(janela, (0, 255, 0), (player_x, player_y, 50, 50)) #player
-            pygame.draw.rect(janela, (0, 255, 0), (0, -65, 900, 300)) #relva
-            pygame.draw.rect(janela, (0, 255, 0), (0, 565, 900, 300)) #relva
-
-            font = pygame.font.SysFont(None, 40)
-            timer_text = font.render(f"Tempo restante: {total_time:.1f}s", True, (255, 255, 255))
-            janela.blit(timer_text, (20, 20))
-
-            finish = font.render("F I N I S H", True, (221, 90, 17))
-            finish_line = pygame.transform.rotate(finish, 270)
-            janela.blit(finish_line, (goal_x + 10, player_y - 40))
-
-            pygame.display.flip()
-        
-        return False
     
     def jogar(self):
         while True:
+            agora = pygame.time.get_ticks()
+            
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     return
                 if event.type == pygame.KEYDOWN:
-                    if self.em_transicao:
-                        # Navegação no menu de fases
+                    if self.estado in ("menu", "dormir"):
+                        num_opcoes = len(self.opcoes_menu)
                         if event.key == pygame.K_UP:
-                            self.fase_selecionada = (self.fase_selecionada - 1) % len(FUNDOS)
+                            self.opcao_selecionada = (self.opcao_selecionada - 1) % num_opcoes
                         elif event.key == pygame.K_DOWN:
-                            self.fase_selecionada = (self.fase_selecionada + 1) % len(FUNDOS)
+                            self.opcao_selecionada = (self.opcao_selecionada + 1) % num_opcoes
                         elif event.key == pygame.K_RETURN:
-                            self.mudar_para_fase(self.fase_selecionada)
-                    else:
-                        # Controles normais do jogo
+                            texto, tipo, destino = self.opcoes_menu[self.opcao_selecionada]
+                            if tipo == "fase":
+                                self.mudar_para_fase(destino)
+                            elif tipo == "treino":
+                                venceu = self.executar_treino()
+                                if venceu:
+                                    if self.indice_refeicao_atual < len(self.ordem_refeicoes) - 1:
+                                        self.mudar_para_fase(self.indice_refeicao_atual + 1)
+                                    else:
+                                        self.mostrar_tela_dormir()
+                            elif tipo == "dormir":
+                                self.mostrar_tela_dormir()
+                            elif tipo == "acordar":
+                                self.mudar_para_fase(0)
+                            elif tipo == "sair":
+                                pygame.quit()
+                                return
+                    else:  # estado "jogando"
                         if event.key == pygame.K_UP and self.direcao != Direcao.BAIXO:
-                            self.direcao = Direcao.CIMA
+                            self.proxima_direcao = Direcao.CIMA
                         elif event.key == pygame.K_DOWN and self.direcao != Direcao.CIMA:
-                            self.direcao = Direcao.BAIXO
+                            self.proxima_direcao = Direcao.BAIXO
                         elif event.key == pygame.K_LEFT and self.direcao != Direcao.DIREITA:
-                            self.direcao = Direcao.ESQUERDA
+                            self.proxima_direcao = Direcao.ESQUERDA
                         elif event.key == pygame.K_RIGHT and self.direcao != Direcao.ESQUERDA:
-                            self.direcao = Direcao.DIREITA
+                            self.proxima_direcao = Direcao.DIREITA
             
-            if not self.em_transicao:
+            if self.estado == "jogando":
                 self.mover_cobra()
+                
+                if agora - self.tempo_ultima_queima >= 1000:
+                    self.calorias -= CALORIAS_POR_SEGUNDO
+                    self.tempo_ultima_queima = agora
+                    if self.calorias < CALORIAS_MIN:
+                        self.calorias = CALORIAS_MIN
+                    self.ajustar_tamanho()
                 
                 if self.verificar_colisao():
                     if self.game_over():
@@ -372,14 +333,14 @@ class SnakeGame:
                         pygame.quit()
                         return
                 
-                comeu = self.verificar_alimento()
-                if comeu:
+                if self.verificar_alimento():
                     self.calorias += self.alimento_atual['energia_kcal']
                     self.pontuacao += self.alimento_atual['energia_kcal']
+                    # Crescimento da cobra
                     desejado_antes = max(1, int((self.calorias - self.alimento_atual['energia_kcal']) // 100))
                     desejado_depois = max(1, int(self.calorias // 100))
                     for _ in range(desejado_depois - desejado_antes):
-                        self.cobra.append(self.cobra[-1])
+                        self.cobra.append(self.cobra[-1])  # adiciona um novo segmento na posição do último
                     self.colocar_alimento()
                 
                 if self.calorias <= CALORIAS_MIN or self.calorias >= CALORIAS_MAX:
@@ -394,21 +355,18 @@ class SnakeGame:
                 self.contador_frames_fase += 1
                 limite_frames = int(FUNDOS[self.fase_atual]['duracao'] * VELOCIDADE)
                 if self.contador_frames_fase >= limite_frames:
-                    self.em_transicao = True
-                    self.fase_selecionada = list(FUNDOS.keys()).index(self.fase_atual)  # Opcional: manter seleção atual
+                    self.preparar_menu_transicao()
             
-            self.desenhar_fundo()
-            self.desenhar_cobra()
-            self.desenhar_alimento()
-            self.desenhar_hud()
+            # Chamadas para o módulo desenho externo
+            desenho.desenhar_fundo(self)
+            desenho.desenhar_cobra(self)
+            desenho.desenhar_alimento(self)
+            desenho.desenhar_hud(self)
             
-            if self.em_transicao:
-                self.desenhar_transicao()
+            if self.estado == "menu":
+                desenho.desenhar_menu(self)
+            elif self.estado == "dormir":
+                desenho.desenhar_dormir(self)
             
             pygame.display.flip()
             self.clock.tick(VELOCIDADE)
-
-
-if __name__ == "__main__":
-    jogo = SnakeGame()
-    jogo.jogar()
