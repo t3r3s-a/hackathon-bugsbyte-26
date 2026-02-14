@@ -34,12 +34,12 @@ class DadosUsuario(BaseModel):
 class MensagemChat(BaseModel):
     pergunta: str
 
-# --- 3. TEU SCHEMA DE INPUT (Para as Checkboxes do site) ---
+# NOVOS SCHEMAS PARA LOGIN/REGISTO
+class RegisterUser(BaseModel):
+    username: str
+    password: str
+    email: str
 
-class QuestionarioInput(BaseModel):
-    idade: int
-    peso: float
-    altura: int
-    objetivo: str
-    alergias: List[str] # Tu recebes a lista do frontend
-    outros: Optional[str] = None
+class LoginUser(BaseModel):
+    username: str
+    password: str
