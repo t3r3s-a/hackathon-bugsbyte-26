@@ -1,0 +1,44 @@
+{
+    "users": [
+        {
+            "username": "ricardo",
+            "email": "ricardo@teste.com",
+            "password": "123",
+            "questionnaire": {
+                "username": "ricardo",
+                "peso": 213.0,
+                "altura": 312321,
+                "objetivo": "Geral",
+                "restricoes": "",
+                "exercicio_fisico": "nao",
+                "frequencia_exercicio": "0 vezes por semana"
+            }
+        },
+        {
+            "username": "string",
+            "email": "string",
+            "password": "string",
+            "questionnaire": null
+        },
+        {
+            "username": "test",
+            "email": "string",
+            "password": "1234",
+            "questionnaire": null
+        },
+        {
+            "username": "4321",
+            "email": "1231231@gmail.com",
+            "password": "1234",
+            "questionnaire": {
+                "username": "4321",
+                "peso": 100.0,
+                "altura": 212,
+                "objetivo": "Geral",
+                "restricoes": "",
+                "exercicio_fisico": "sim",
+                "frequencia_exercicio": "4 vezes por semana"
+            }
+        }
+    ]
+}
