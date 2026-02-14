@@ -5,7 +5,8 @@ from pydantic import BaseModel
 from typing import Optional
 
 router = APIRouter()
-DB_FILE = "database.json"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__)) 
+DB_FILE = os.path.join(BASE_DIR, "..", "database.json")
 
 # --- 1. MODELOS DE DADOS ---
 

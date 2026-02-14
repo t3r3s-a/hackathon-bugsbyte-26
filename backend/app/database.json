@@ -41,6 +41,20 @@
                 "exercicio_fisico": "sim",
                 "frequencia_exercicio": "7 vezes por semana"
             }
+        },
+        {
+            "username": "teresa",
+            "email": "teresa@gmail.com",
+            "password": "teresateresa",
+            "questionnaire": {
+                "username": "teresa",
+                "peso": 57.0,
+                "altura": 166,
+                "objetivo": "Geral",
+                "restricoes": "",
+                "exercicio_fisico": "sim",
+                "frequencia_exercicio": "1 vezes por semana"
+            }
         }
     ]
 }
