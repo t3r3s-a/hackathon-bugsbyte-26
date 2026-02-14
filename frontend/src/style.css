@@ -77,3 +77,49 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+.food-header-info {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.food-image {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 15px;
+  background: white;
+  padding: 5px;
+  border: 2px solid #27ae60;
+}
+
+.tag-cor {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: bold;
+}
+
+.tag-cor.verde { background: #27ae60; color: white; }
+.tag-cor.amarelo { background: #f1c40f; color: black; }
+.tag-cor.vermelho { background: #e74c3c; color: white; }
+
+.iframe-wrapper {
+  width: 95%; /* Usa percentagem para ser mais flexível */
+  max-width: 920px;
+  height: auto; /* Deixa o conteúdo ditar a altura */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.game-iframe {
+  width: 900px;
+  height: 800px; /* Mantém o tamanho fixo do Pygame */
+  border: 4px solid #27ae60;
+  background: black;
+  /* Garante que o iframe não escala e quebra o rácio */
+  aspect-ratio: 9/8; 
+}

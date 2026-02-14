@@ -1,6 +1,7 @@
 import { createApp } from 'vue'; 
 import App from './App.vue';
 import { createRouter, createWebHistory } from 'vue-router';
+import JogoView from './views/Jogo.vue';
 
 import MainView from './views/MainView.vue';
 import LoginView from './views/LoginView.vue';
@@ -16,6 +17,7 @@ const routes = [
   { path: '/questionnaire', component: QuestionnaireView },
   { path: '/welcome', component: WelcomeView },
   { path: '/chat', component: ChatView },
+  { path: '/jogo', name: 'jogo', component: JogoView },
 ];
 
 const router = createRouter({

@@ -1,34 +1,42 @@
 <script setup>
+import { ref } from "vue";
 import { useRouter } from "vue-router";
-// Importamos a logo para manter a marca presente
-import logoParceria from "../assets/logo-parceria.png"; 
+import axios from "axios";
 
 const router = useRouter();
+const loading = ref(false); // Para mostrar "A carregar..."
+
+// Recupera o utilizador logado (ex: "pou")
 const usuario = localStorage.getItem("usuario_logado") || "Explorador";
 
-// Dica aleatória para dar vida à página
-const dicas = [
-  "Beber água ajuda-te a pensar melhor! 💧",
-  "As maçãs dão-te energia para brincar! 🍎",
-  "Um prato colorido é um prato de super-herói! 🌈",
-  "Cresce forte e saudável com a ajuda dos legumes! 🥦",
-  "Fruta fresca é o melhor doce da natureza! 🍓",
-  "Mastiga bem para sentires todos os sabores! 😋",
-  "Beber água é o segredo para teres super velocidade! ⚡",
-  "Experimenta um alimento novo hoje e sê um explorador! 🧭",
-  "Barriga feliz, coração contente! ❤️",
-  "Sopa no início da refeição dá-te superpoderes! 🥣",
-  "O pequeno-almoço é o combustível para o teu dia! 🚀",
-  "O teu corpo é o teu castelo, cuida bem dele! 🏰",
-  "Beber leite ou bebidas vegetais fortalece os teus ossos! 🥛",
-  "Cenouras ajudam-te a ver melhor, como um lince! 🥕",
-  "Frutos secos são pequenos tesouros de energia! 🥜",
-  "Dormir bem ajuda a tua comida a fazer-te crescer! 💤",
-  "Lavar as mãos antes de comer é o primeiro passo da saúde! 🧼",
-  "Tu és o que comes: escolhe ser incrível! ✨"
-];
-  
-const dicaDoDia = dicas[Math.floor(Math.random() * dicas.length)];
+// --- FUNÇÃO PARA BAIXAR O PDF DA IA ---
+const baixarPlano = async () => {
+  loading.value = true;
+  try {
+    // Chama a rota que criámos no backend: /api/plano/{username}
+    const response = await axios.get(`http://127.0.0.1:8000/api/plano/${usuario}`, {
+      responseType: 'blob' // OBRIGATÓRIO para ficheiros (PDF, Imagens, etc)
+    });
+
+    // Cria um link invisível para forçar o download no browser
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Plano_Nutrium_${usuario}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+  } catch (error) {
+    console.error(error);
+    alert("Não foi possível gerar o plano. Verifica se preencheste o questionário!");
+  } finally {
+    loading.value = false;
+  }
+};
+
+const irParaJogo = () => router.push('/jogo');
+const irParaChat = () => router.push('/chat'); // Confirma se tens esta rota
 </script>
 
 <template>
@@ -39,49 +47,57 @@ const dicaDoDia = dicas[Math.floor(Math.random() * dicas.length)];
 
     <div class="dashboard-container">
       <header class="welcome-header">
-        <img :src="logoParceria" alt="Nutrium x Snack-e" class="brand-logo" />
-        <h1 class="title">Olá, <span class="highlight">{{ usuario }}</span>! 🌟</h1>
-        <p class="subtitle">O que vamos explorar hoje?</p>
+        <h1 class="brand">Olá, <span class="snake-text">{{ usuario }}</span>!</h1>
+        <p>O teu perfil nutricional foi analisado. O que queres explorar agora?</p>
       </header>
 
-      <div class="main-grid">
-        <button @click="router.push('/dashboard')" class="hero-card plan-card">
-          <div class="hero-info">
-            <span class="big-icon">🥗</span>
-            <div class="hero-text-content">
-              <h3>O Meu Plano Saudável</h3>
-              <p>Descobre o que o teu corpo precisa hoje para crescer forte!</p>
+      <div class="options-container">
+        <button 
+          @click="baixarPlano" 
+          class="plan-hero-btn" 
+          :disabled="loading"
+          :style="loading ? 'opacity: 0.7; cursor: wait;' : ''"
+        >
+          <div class="hero-content">
+            <span class="hero-icon" v-if="!loading">📋</span>
+            <span class="hero-icon spinning" v-else>⏳</span>
+            
+            <div class="hero-text">
+              <h3 v-if="!loading">Baixar o meu Plano Personalizado</h3>
+              <h3 v-else>A IA está a criar o teu plano...</h3>
+              
+              <p v-if="!loading">Consulta as tuas metas de calorias e macros</p>
+              <p v-else>Isto pode demorar uns segundos.</p>
             </div>
           </div>
-          <span class="action-tag">Ver agora</span>
+          <span class="arrow" v-if="!loading">⬇️</span>
         </button>
 
-        <div class="sub-grid">
-          <button @click="router.push('/chat')" class="choice-card ai-card">
-            <div class="icon-bg">🤖</div>
-            <h3>IA Nutricional</h3>
-            <p>Tens dúvidas? Conversa com a nossa IA!</p>
-            <div class="card-footer">Falar agora →</div>
-          </button>
-
-          <button @click="alert('Jogo Snack-e em breve!')" class="choice-card game-card">
-            <div class="icon-bg">🐍</div>
+        <div class="options-grid">
+          <button @click="irParaJogo" class="choice-card snake-card">
+            <div class="icon-circle">🐍</div>
             <h3>Snack-e Game</h3>
-            <p>Diverte-te e queima calorias!</p>
-            <div class="card-footer">Começar Jogo →</div>
+            <p>Aprende sobre alimentos e diverte-te!</p>
+            <span class="btn-label">Jogar Agora</span>
           </button>
         </div>
 
-        <div class="tip-card">
-          <span class="tip-icon">💡</span>
-          <p><strong>Dica do dia:</strong> {{ dicaDoDia }}</p>
+          <button @click="irParaChat" class="choice-card ai-card">
+            <div class="icon-circle">🤖</div>
+            <h3>Amigo Presente</h3>
+            <p>Dúvidas? Pergunta ao nosso robô.</p>
+            <span class="btn-label">Conversar</span>
+          </button>
         </div>
       </div>
+
+      <button @click="router.push('/')" class="btn-logout">Sair da conta</button>
     </div>
   </div>
 </template>
 
 <style scoped>
+/* Mantive o teu estilo base e melhorei as transições */
 .view-wrapper {
   display: flex; align-items: center; justify-content: center;
   min-height: 100vh; background: #f8fafc; padding: 30px;
@@ -102,6 +118,15 @@ const dicaDoDia = dicas[Math.floor(Math.random() * dicas.length)];
   padding: 50px; border-radius: 40px; border: 1px solid rgba(255, 255, 255, 0.7);
   box-shadow: 0 25px 50px rgba(0,0,0,0.05);
 }
+.welcome-header h1 { font-size: 30px; font-weight: 800; margin-bottom: 10px; }
+.welcome-header p { color: #64748b; margin-bottom: 35px; }
+
+/* Gradiente Laranja/Verde para o nome */
+.snake-text { 
+  background: linear-gradient(90deg, #27ae60, #2ecc71); 
+  -webkit-background-clip: text; 
+  -webkit-text-fill-color: transparent; 
+}
 
 .welcome-header { text-align: center; margin-bottom: 40px; }
 .brand-logo { height: 45px; margin-bottom: 20px; }
@@ -109,24 +134,19 @@ const dicaDoDia = dicas[Math.floor(Math.random() * dicas.length)];
 .highlight { color: #47baac; }
 .subtitle { color: #64748b; font-size: 1.1rem; }
 
-.main-grid { display: flex; flex-direction: column; gap: 24px; }
-
-/* Hero Card */
-.hero-card {
-  width: 100%; display: flex; align-items: center; justify-content: space-between;
-  padding: 30px; border-radius: 28px; border: none; cursor: pointer;
+.plan-hero-btn {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 25px; border-radius: 24px; border: none;
+  background: #2d3436; color: white; cursor: pointer;
   transition: all 0.3s ease; text-align: left;
   background: linear-gradient(135deg, #47baac 0%, #3a968a 100%); color: white;
 }
-.hero-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(71, 186, 172, 0.3); }
-.hero-info { display: flex; align-items: center; gap: 25px; }
-.big-icon { font-size: 45px; }
-.hero-text-content h3 { font-size: 1.4rem; margin: 0 0 5px 0; font-weight: 800; }
-.hero-text-content p { margin: 0; opacity: 0.9; font-size: 1rem; }
-.action-tag { background: rgba(255, 255, 255, 0.2); padding: 8px 16px; border-radius: 50px; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; }
+.plan-hero-btn:hover {
+  background: #27ae60; transform: translateY(-3px);
+  box-shadow: 0 15px 30px rgba(39, 174, 96, 0.2);
+}
 
-/* Sub Grid */
-.sub-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 
 .choice-card {
   background: white; border: 1.5px solid #f1f5f9; padding: 30px;
@@ -140,17 +160,19 @@ const dicaDoDia = dicas[Math.floor(Math.random() * dicas.length)];
   display: flex; align-items: center; justify-content: center;
   font-size: 35px; margin-bottom: 20px;
 }
-.choice-card h3 { font-size: 1.2rem; font-weight: 800; color: #1e293b; margin: 0 0 10px 0; }
-.choice-card p { font-size: 0.95rem; color: #64748b; margin: 0 0 20px 0; line-height: 1.5; }
-.card-footer { font-weight: 700; color: #47baac; font-size: 0.9rem; }
 
-/* Dica do Dia */
-.tip-card {
-  display: flex; align-items: center; gap: 15px; padding: 20px;
-  background: #fef9c3; border-radius: 20px; color: #854d0e;
+.icon-circle {
+  width: 60px; height: 60px; background: #f0fdf4;
+  border-radius: 50%; display: flex; align-items: center;
+  justify-content: center; font-size: 30px; margin-bottom: 15px;
 }
-.tip-icon { font-size: 24px; }
-.tip-card p { margin: 0; font-size: 0.95rem; }
+
+.btn-label { font-weight: 700; font-size: 12px; color: #27ae60; text-transform: uppercase; margin-top: 10px; }
+
+.btn-logout {
+  margin-top: 30px; background: none; border: none; color: #94a3b8;
+  font-size: 14px; cursor: pointer; text-decoration: underline;
+}
 
 @media (max-width: 650px) {
   .sub-grid { grid-template-columns: 1fr; }
