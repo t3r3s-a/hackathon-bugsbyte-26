@@ -17,6 +17,7 @@ class SnakeGame:
         self.font_calorias = pygame.font.Font(None, 25)
         self.font_transicao = pygame.font.Font(None, 48)
         
+        self.fase_selecionada = 0  # Índice da fase escolhida no menu de transição
         self.reset_jogo()
         
     def calcular_offset_grid(self):
@@ -40,6 +41,7 @@ class SnakeGame:
     def reset_jogo(self):
         self.direcao = Direcao.DIREITA
         self.fase_atual = 'fase1'
+        self.fase_selecionada = 0
         self.calcular_offset_grid()
         
         col_centro = self.grid_cols // 2
@@ -75,14 +77,14 @@ class SnakeGame:
         # Se não encontrar posição livre, game over (improvável)
         self.game_over()
         
-    def mudar_fase(self):
+    def mudar_para_fase(self, indice):
+        """Muda para a fase correspondente ao índice fornecido."""
         fases = list(FUNDOS.keys())
-        indice_atual = fases.index(self.fase_atual)
-        proximo_indice = (indice_atual + 1) % len(fases)
-        self.fase_atual = fases[proximo_indice]
+        self.fase_atual = fases[indice]
         self.calcular_offset_grid()
         self.contador_frames_fase = 0
         
+        # Posiciona a cobra no centro com base nas calorias atuais
         col_centro = self.grid_cols // 2
         row_centro = self.grid_rows // 2
         x = self.grid_offset_x + col_centro * self.tamanho_celula
@@ -94,6 +96,14 @@ class SnakeGame:
         self.direcao = Direcao.DIREITA
         
         self.colocar_fruta()
+        self.em_transicao = False
+    
+    # (Opcional) Manter o método antigo por compatibilidade, mas não será usado
+    def mudar_fase(self):
+        fases = list(FUNDOS.keys())
+        indice_atual = fases.index(self.fase_atual)
+        proximo_indice = (indice_atual + 1) % len(fases)
+        self.mudar_para_fase(proximo_indice)
             
     def desenhar_fundo(self):
         fundo = FUNDOS[self.fase_atual]
@@ -161,24 +171,25 @@ class SnakeGame:
                          (x_barra + largura_barra + 10, y_barra))
     
     def desenhar_transicao(self):
+        """Desenha o menu de escolha de fase."""
         overlay = pygame.Surface((self.largura, self.altura), pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 180))
         self.display.blit(overlay, (0, 0))
         
         fases = list(FUNDOS.keys())
-        indice_atual = fases.index(self.fase_atual)
-        proxima_fase = fases[(indice_atual + 1) % len(fases)]
-        nome_proxima = FUNDOS[proxima_fase]['nome']
+        titulo = self.font_transicao.render("Escolha a próxima fase:", True, BRANCO)
+        self.display.blit(titulo, (self.largura//2 - titulo.get_width()//2, self.altura//2 - 150))
         
-        texto1 = self.font_transicao.render(f'Fase Concluída!', True, BRANCO)
-        texto2 = self.font_transicao.render(f'Próxima: {nome_proxima}', True, BRANCO)
-        texto3 = self.font_fase.render('Pressione ENTER para continuar', True, BRANCO)
+        # Desenha as opções
+        y = self.altura // 2 - 50
+        for i, fase_key in enumerate(fases):
+            cor = VERDE if i == self.fase_selecionada else BRANCO
+            texto = self.font_fase.render(f"{i+1}. {FUNDOS[fase_key]['nome']}", True, cor)
+            self.display.blit(texto, (self.largura//2 - texto.get_width()//2, y))
+            y += 40
         
-        centro_x = self.largura // 2
-        y = self.altura // 2 - 60
-        self.display.blit(texto1, (centro_x - texto1.get_width()//2, y))
-        self.display.blit(texto2, (centro_x - texto2.get_width()//2, y + 50))
-        self.display.blit(texto3, (centro_x - texto3.get_width()//2, y + 120))
+        instrucoes = self.font_fase.render("Use as setas ↑ ↓ para navegar, Enter para confirmar", True, BRANCO)
+        self.display.blit(instrucoes, (self.largura//2 - instrucoes.get_width()//2, self.altura//2 + 100))
     
     def mover_cobra(self):
         cabeca = self.cobra[0].copy()
@@ -243,10 +254,15 @@ class SnakeGame:
                     return
                 if event.type == pygame.KEYDOWN:
                     if self.em_transicao:
-                        if event.key == pygame.K_RETURN:
-                            self.mudar_fase()
-                            self.em_transicao = False
+                        # Navegação no menu de fases
+                        if event.key == pygame.K_UP:
+                            self.fase_selecionada = (self.fase_selecionada - 1) % len(FUNDOS)
+                        elif event.key == pygame.K_DOWN:
+                            self.fase_selecionada = (self.fase_selecionada + 1) % len(FUNDOS)
+                        elif event.key == pygame.K_RETURN:
+                            self.mudar_para_fase(self.fase_selecionada)
                     else:
+                        # Controles normais do jogo
                         if event.key == pygame.K_UP and self.direcao != Direcao.BAIXO:
                             self.direcao = Direcao.CIMA
                         elif event.key == pygame.K_DOWN and self.direcao != Direcao.CIMA:
@@ -291,6 +307,7 @@ class SnakeGame:
                 limite_frames = int(FUNDOS[self.fase_atual]['duracao'] * VELOCIDADE)
                 if self.contador_frames_fase >= limite_frames:
                     self.em_transicao = True
+                    self.fase_selecionada = list(FUNDOS.keys()).index(self.fase_atual)  # Opcional: manter seleção atual
             
             self.desenhar_fundo()
             self.desenhar_cobra()
