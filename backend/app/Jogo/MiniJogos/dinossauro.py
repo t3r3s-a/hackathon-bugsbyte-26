@@ -1,6 +1,7 @@
 import pygame
 import random
 import constantes
+import os
 
 def minigame_dinossauro(calorias):
     pygame.init()
@@ -11,19 +12,35 @@ def minigame_dinossauro(calorias):
     JUMP_FORCE = -12
     OBS_SPEED = 6
 
-    # cauda baseada nas calorias
-    num_segmentos = max(1, calorias // 100)
-    DIST_SEG = 30
-    DELAY_FRAMES = max(1, DIST_SEG // OBS_SPEED)
+    # ==============================
+    # CARREGAR BACKGROUND COM OS
+    # ==============================
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    caminho_bg = os.path.join(BASE_DIR, "Fundos", "background_dinossaur.png")
 
-    screen = pygame.display.set_mode((constantes.LARGURA_JANELA, constantes.ALTURA_JANELA))
+    screen = pygame.display.set_mode(
+        (constantes.LARGURA_JANELA, constantes.ALTURA_JANELA)
+    )
     pygame.display.set_caption("Minijogo Dinossauro")
     clock = pygame.time.Clock()
+
+    background = pygame.image.load(caminho_bg).convert()
+    background = pygame.transform.scale(
+        background,
+        (constantes.LARGURA_JANELA, constantes.ALTURA_JANELA)
+    )
+
+    # ==============================
 
     head_x = 150
     head_y = GROUND_Y
     head_vel_y = 0
     head_on_ground = True
+
+    # cauda baseada nas calorias
+    num_segmentos = max(1, calorias // 100)
+    DIST_SEG = 30
+    DELAY_FRAMES = max(1, DIST_SEG // OBS_SPEED)
 
     input_buffer = []
     MAX_BUFFER = num_segmentos * DELAY_FRAMES + 20
@@ -35,9 +52,11 @@ def minigame_dinossauro(calorias):
 
     def spawn_obstaculo():
         h = random.randint(30, 60)
-        obstaculos.append(pygame.Rect(constantes.LARGURA_JANELA, GROUND_Y - h, 20, h))
+        obstaculos.append(
+            pygame.Rect(constantes.LARGURA_JANELA, GROUND_Y - h, 20, h)
+        )
 
-    tempo = 10.0
+    tempo = 20.0
 
     running = True
     while running:
@@ -47,7 +66,7 @@ def minigame_dinossauro(calorias):
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                return -1  # usuário fechou a janela
+                return -1
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE and head_on_ground:
                     head_vel_y = JUMP_FORCE
@@ -58,7 +77,7 @@ def minigame_dinossauro(calorias):
         if len(input_buffer) > MAX_BUFFER:
             input_buffer.pop()
 
-        # física cabeça
+        # Física cabeça
         head_vel_y += GRAVITY
         head_y += head_vel_y
         if head_y >= GROUND_Y:
@@ -66,9 +85,9 @@ def minigame_dinossauro(calorias):
             head_vel_y = 0
             head_on_ground = True
 
-        # física cauda
+        # Física cauda
         for i, seg in enumerate(segmentos):
-            idx = (i+1) * DELAY_FRAMES
+            idx = (i + 1) * DELAY_FRAMES
             jump = input_buffer[idx] if idx < len(input_buffer) else False
 
             if jump and seg["y"] >= GROUND_Y:
@@ -81,7 +100,7 @@ def minigame_dinossauro(calorias):
                 seg["y"] = GROUND_Y
                 seg["vel_y"] = 0
 
-        # obstáculos
+        # Obstáculos
         spawn_timer += 1
         if spawn_timer > 90:
             spawn_timer = 0
@@ -91,17 +110,30 @@ def minigame_dinossauro(calorias):
             obs.x -= OBS_SPEED
         obstaculos = [o for o in obstaculos if o.x > -50]
 
-        # colisão cabeça
+        # Colisão cabeça
         head_rect = pygame.Rect(head_x - 10, head_y - 10, 20, 20)
         for obs in obstaculos:
             if head_rect.colliderect(obs):
-                return 0  # morreu
+                return 0
 
         if tempo <= 0:
             return random.randint(100, 200)
 
-        screen.fill((30, 30, 30))
-        pygame.draw.rect(screen, (70, 70, 70), (0, GROUND_Y + 10, constantes.LARGURA_JANELA, 100))
+        # ==============================
+        # DESENHO
+        # ==============================
+
+        screen.blit(background, (0, 0))
+
+        caminho_chao = os.path.join(BASE_DIR, "Fundos", "chao_dinossaur.png")
+
+        chao_img = pygame.image.load(caminho_chao).convert_alpha()
+
+        chao_img = pygame.transform.scale(
+            chao_img,
+            (constantes.LARGURA_JANELA, 100)
+)
+        screen.blit(chao_img, (0, GROUND_Y + 10))
 
         for obs in obstaculos:
             pygame.draw.rect(screen, (200, 50, 50), obs)
@@ -111,7 +143,8 @@ def minigame_dinossauro(calorias):
             y = segmentos[i]["y"]
             pygame.draw.rect(screen, (0, 200, 0), (x - 8, y - 8, 16, 16))
 
-        pygame.draw.rect(screen, (0, 255, 0), (head_x - 10, head_y - 10, 20, 20))
+        pygame.draw.rect(screen, (0, 255, 0),
+                         (head_x - 10, head_y - 10, 20, 20))
 
         font = pygame.font.SysFont(None, 30)
         txt = font.render(f"{tempo:.1f}s", True, (255, 255, 255))
