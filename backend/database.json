@@ -18,7 +18,22 @@
             "username": "string",
             "email": "string",
             "password": "string",
-            "questionnaire": null
+            "questionnaire": {
+                "username": "string",
+                "idade": 0,
+                "peso": 0.0,
+                "altura": 0.0,
+                "sexo": "string",
+                "faz_desporto": "string",
+                "frequencia_desporto": 0,
+                "brinca_na_rua": "string",
+                "alergias": [
+                    "ovos"
+                ],
+                "quem_cozinha": "string",
+                "quem_cozinha_outro": "",
+                "come_na_cantina": "string"
+            }
         },
         {
             "username": "test",
@@ -39,6 +54,24 @@
                 "exercicio_fisico": "sim",
                 "frequencia_exercicio": "4 vezes por semana"
             }
+        },
+        {
+            "username": "cardadlos",
+            "email": "afwaf@da",
+            "password": "21442",
+            "questionnaire": null
+        },
+        {
+            "username": "nigga",
+            "email": "nigga@as",
+            "password": "nigga",
+            "questionnaire": null
+        },
+        {
+            "username": "jorge",
+            "email": "jorge@",
+            "password": "jorge",
+            "questionnaire": null
         }
     ]
 }

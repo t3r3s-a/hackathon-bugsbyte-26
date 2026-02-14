@@ -3,9 +3,12 @@ import os
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
+from app.schemas import DadosUsuario
+from app.data.alergias import alergia as LISTA_ALERGIAS_OFICIAL
 
 router = APIRouter()
-DB_FILE = "database.json"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+DB_FILE = os.path.join(BASE_DIR, "database.json")
 
 # --- 1. MODELOS DE DADOS ---
 
@@ -82,13 +85,38 @@ def get_profile(username: str):
             return u
     raise HTTPException(status_code=404, detail="Utilizador não encontrado")
 
-@router.post("/save-profile")
-def save_profile(data: UserQuestionnaire):
+@router.post("/save-questionnaire")
+async def save_questionnaire(dados: DadosUsuario):
     db = load_db()
-    for u in db["users"]:
-        if u["username"] == data.username:
-            # Atualiza apenas o campo questionnaire
-            u["questionnaire"] = data.dict()
-            save_db(db)
-            return {"status": "success", "message": "Questionário guardado!"}
-    raise HTTPException(status_code=404, detail="Utilizador não encontrado")
+    
+    # 1. Encontrar o utilizador pelo username
+    user_idx = None
+    for i, u in enumerate(db["users"]):
+        if u["username"].lower() == dados.username.lower():
+            user_idx = i
+            break
+            
+    if user_idx is None:
+        raise HTTPException(status_code=404, detail="Utilizador não encontrado.")
+
+    # 2. Filtrar Alergias: Só guarda as que estão no teu ficheiro alergias.py
+    # Se o utilizador selecionar "amendoim", o código verifica se existe na lista oficial
+    alergias_para_guardar = [
+        a for a in dados.alergias 
+        if a.lower() in [oficial.lower() for oficial in LISTA_ALERGIAS_OFICIAL]
+    ]
+
+    # 3. Atualizar os dados do utilizador no dicionário
+    questionario_final = dados.model_dump()
+    questionario_final["alergias"] = alergias_para_guardar # Substitui pelas validadas
+    
+    db["users"][user_idx]["questionnaire"] = questionario_final
+
+    # 4. Gravar no database.json
+    save_db(db)
+
+    return {
+        "status": "success",
+        "message": f"Questionário do {dados.username} guardado com sucesso!",
+        "alergias_guardadas": alergias_para_guardar
+    }

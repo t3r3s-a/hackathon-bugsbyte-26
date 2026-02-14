@@ -1,0 +1,46 @@
+{
+    "users": [
+        {
+            "username": "roddy",
+            "email": "ola@gmail.com",
+            "password": "123456",
+            "questionnaire": {
+                "username": "roddy",
+                "peso": 100.0,
+                "altura": 170,
+                "objetivo": "Geral",
+                "restricoes": "gluten",
+                "exercicio_fisico": "sim",
+                "frequencia_exercicio": "5 vezes por semana"
+            }
+        },
+        {
+            "username": "gui",
+            "email": "gui@gmail.com",
+            "password": "123456",
+            "questionnaire": {
+                "username": "gui",
+                "peso": 80.0,
+                "altura": 180,
+                "objetivo": "Geral",
+                "restricoes": "gluten",
+                "exercicio_fisico": "sim",
+                "frequencia_exercicio": "3 vezes por semana"
+            }
+        },
+        {
+            "username": "martim",
+            "email": "mart@gmail.com",
+            "password": "123456",
+            "questionnaire": {
+                "username": "martim",
+                "peso": 80.0,
+                "altura": 189,
+                "objetivo": "Geral",
+                "restricoes": "gluten",
+                "exercicio_fisico": "sim",
+                "frequencia_exercicio": "7 vezes por semana"
+            }
+        }
+    ]
+}
