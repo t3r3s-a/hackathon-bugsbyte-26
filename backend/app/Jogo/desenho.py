@@ -66,27 +66,38 @@ def desenhar_hud(self):
     self.display.blit(self.font_calorias.render(f'{int(self.calorias)}/{CALORIAS_MAX}', True, BRANCO),
                      (x_barra + largura_barra + 10, y_barra))
 
-def desenhar_transicao(self):
+def desenhar_menu(self):
     overlay = pygame.Surface((self.largura, self.altura), pygame.SRCALPHA)
     overlay.fill((0, 0, 0, 180))
     self.display.blit(overlay, (0, 0))
     
-    fases = list(FUNDOS.keys())
-    num_opcoes = len(fases) + 1
-    titulo = self.font_transicao.render("Escolha a próxima fase ou minijogo:", True, BRANCO)
-    self.display.blit(titulo, (self.largura//2 - titulo.get_width()//2, self.altura//2 - 180))
+    titulo = self.font_transicao.render("Escolha sua próxima ação:", True, BRANCO)
+    self.display.blit(titulo, (self.largura//2 - titulo.get_width()//2, self.altura//2 - 150))
     
-    y = self.altura // 2 - 80
-    for i, fase_key in enumerate(fases):
-        cor = VERDE if i == self.fase_selecionada else BRANCO
-        texto = self.font_fase.render(f"{i+1}. {FUNDOS[fase_key]['nome']}", True, cor)
-        self.display.blit(texto, (self.largura//2 - texto.get_width()//2, y))
+    y = self.altura // 2 - 50
+    for i, (texto, tipo, destino) in enumerate(self.opcoes_menu):
+        cor = VERDE if i == self.opcao_selecionada else BRANCO
+        texto_render = self.font_fase.render(texto, True, cor)
+        self.display.blit(texto_render, (self.largura//2 - texto_render.get_width()//2, y))
         y += 40
     
-    i_minijogo = len(fases)
-    cor_mini = VERDE if self.fase_selecionada == i_minijogo else BRANCO
-    texto_mini = self.font_fase.render(f"{i_minijogo+1}. 🎲 Minijogo Aleatório", True, cor_mini)
-    self.display.blit(texto_mini, (self.largura//2 - texto_mini.get_width()//2, y))
+    instrucoes = self.font_fase.render("Use as setas ↑ ↓ para navegar, Enter para confirmar", True, BRANCO)
+    self.display.blit(instrucoes, (self.largura//2 - instrucoes.get_width()//2, self.altura//2 + 100))
+
+def desenhar_dormir(self):
+    overlay = pygame.Surface((self.largura, self.altura), pygame.SRCALPHA)
+    overlay.fill((0, 0, 0, 180))
+    self.display.blit(overlay, (0, 0))
+    
+    titulo = self.font_transicao.render("Você foi dormir. O que deseja?", True, BRANCO)
+    self.display.blit(titulo, (self.largura//2 - titulo.get_width()//2, self.altura//2 - 150))
+    
+    y = self.altura // 2 - 50
+    for i, (texto, tipo, destino) in enumerate(self.opcoes_menu):
+        cor = VERDE if i == self.opcao_selecionada else BRANCO
+        texto_render = self.font_fase.render(texto, True, cor)
+        self.display.blit(texto_render, (self.largura//2 - texto_render.get_width()//2, y))
+        y += 40
     
     instrucoes = self.font_fase.render("Use as setas ↑ ↓ para navegar, Enter para confirmar", True, BRANCO)
     self.display.blit(instrucoes, (self.largura//2 - instrucoes.get_width()//2, self.altura//2 + 100))
