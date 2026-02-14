@@ -116,6 +116,27 @@
                 "quem_cozinha_outro": "mulher",
                 "come_na_cantina": "sim"
             }
+        },
+        {
+            "username": "cruz",
+            "email": "cruz@gmail",
+            "password": "cruz",
+            "questionnaire": {
+                "username": "cruz",
+                "idade": 11,
+                "peso": 30.0,
+                "altura": 160.0,
+                "sexo": "Masculino",
+                "faz_desporto": "sim",
+                "frequencia_desporto": 2,
+                "brinca_na_rua": "nao",
+                "alergias": [
+                    "peixes"
+                ],
+                "quem_cozinha": "mae",
+                "quem_cozinha_outro": "",
+                "come_na_cantina": "sim"
+            }
         }
     ]
 }
