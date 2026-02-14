@@ -2,10 +2,10 @@ import pygame
 import random
 import os
 import sys
+import importlib
 
 from constantes import *
 from alimento import alimentos
-
 
 class SnakeGame:
     def __init__(self):
@@ -24,7 +24,8 @@ class SnakeGame:
 
         self.caminho_base = os.path.dirname(__file__)
         
-        self.fase_selecionada = 0  # Índice da fase escolhida no menu de transição
+        self.fase_selecionada = 0
+        self.minijogos = ['corrida', 'equilibrio', 'dinossauro']
         self.reset_jogo()
         
     def calcular_offset_grid(self):
@@ -89,24 +90,11 @@ class SnakeGame:
         self.game_over()
         
     def mudar_para_fase(self, indice):
-        """Muda para a fase correspondente ao índice fornecido."""
-        # minijogo entre fase1 e fase2
-        if self.fase_atual == "fase1":
-            venceu = self.minigame_corrida()
-            if not venceu:
-                if self.game_over():
-                    self.reset_jogo()
-                else:
-                    pygame.quit()
-                    sys.exit()
-                return
-
         fases = list(FUNDOS.keys())
         self.fase_atual = fases[indice]
         self.calcular_offset_grid()
         self.contador_frames_fase = 0
         
-        # Posiciona a cobra no centro com base nas calorias atuais
         col_centro = self.grid_cols // 2
         row_centro = self.grid_rows // 2
         x = self.grid_offset_x + col_centro * self.tamanho_celula
@@ -118,16 +106,47 @@ class SnakeGame:
         self.direcao = Direcao.DIREITA
         
         self.colocar_alimento()
-        self.colocar_fruta()
         self.em_transicao = False
-    
-    # (Opcional) Manter o método antigo por compatibilidade, mas não será usado
-    def mudar_fase(self):
-        fases = list(FUNDOS.keys())
-        indice_atual = fases.index(self.fase_atual)
-        proximo_indice = (indice_atual + 1) % len(fases)
-        self.mudar_para_fase(proximo_indice)
-            
+
+    def executar_minijogo_aleatorio(self):
+        minijogo = random.choice(self.minijogos)
+        nome_funcao = f"minigame_{minijogo}"
+        try:
+            modulo = importlib.import_module(f"MiniJogos.{minijogo}")
+            funcao = getattr(modulo, nome_funcao)
+        except (ModuleNotFoundError, AttributeError) as e:
+            print(f"Erro ao carregar minijogo {minijogo}: {e}")
+            return True
+
+        resultado = funcao(self.calorias)
+
+        if resultado == -1:  # usuário fechou a janela
+            pygame.quit()
+            sys.exit()
+
+        if resultado == 0:
+            # Perdeu no minijogo: aplica penalidade
+            self.calorias -= 50
+            if self.calorias < CALORIAS_MIN:
+                self.calorias = CALORIAS_MIN
+        else:
+            # Ganhou: subtrai as calorias queimadas
+            self.calorias -= resultado
+            if self.calorias < CALORIAS_MIN:
+                self.calorias = CALORIAS_MIN
+
+        self.ajustar_tamanho()
+
+        if self.calorias <= CALORIAS_MIN:
+            if self.game_over():
+                self.reset_jogo()
+            else:
+                pygame.quit()
+                sys.exit()
+            return False
+
+        return True
+
     def desenhar_fundo(self):
         fundo = FUNDOS[self.fase_atual]
         pygame.draw.rect(self.display, PRETO, (0, 0, self.largura, HUD_ALTURA))
@@ -194,22 +213,26 @@ class SnakeGame:
                          (x_barra + largura_barra + 10, y_barra))
     
     def desenhar_transicao(self):
-        """Desenha o menu de escolha de fase."""
         overlay = pygame.Surface((self.largura, self.altura), pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 180))
         self.display.blit(overlay, (0, 0))
         
         fases = list(FUNDOS.keys())
-        titulo = self.font_transicao.render("Escolha a próxima fase:", True, BRANCO)
-        self.display.blit(titulo, (self.largura//2 - titulo.get_width()//2, self.altura//2 - 150))
+        num_opcoes = len(fases) + 1
+        titulo = self.font_transicao.render("Escolha a próxima fase ou minijogo:", True, BRANCO)
+        self.display.blit(titulo, (self.largura//2 - titulo.get_width()//2, self.altura//2 - 180))
         
-        # Desenha as opções
-        y = self.altura // 2 - 50
+        y = self.altura // 2 - 80
         for i, fase_key in enumerate(fases):
             cor = VERDE if i == self.fase_selecionada else BRANCO
             texto = self.font_fase.render(f"{i+1}. {FUNDOS[fase_key]['nome']}", True, cor)
             self.display.blit(texto, (self.largura//2 - texto.get_width()//2, y))
             y += 40
+        
+        i_minijogo = len(fases)
+        cor_mini = VERDE if self.fase_selecionada == i_minijogo else BRANCO
+        texto_mini = self.font_fase.render(f"{i_minijogo+1}. 🎲 Minijogo Aleatório", True, cor_mini)
+        self.display.blit(texto_mini, (self.largura//2 - texto_mini.get_width()//2, y))
         
         instrucoes = self.font_fase.render("Use as setas ↑ ↓ para navegar, Enter para confirmar", True, BRANCO)
         self.display.blit(instrucoes, (self.largura//2 - instrucoes.get_width()//2, self.altura//2 + 100))
@@ -268,73 +291,6 @@ class SnakeGame:
                     esperando = False
                     return True
         return True
-
-    # ============================
-    # MINIJOGO Q/E
-    # ============================
-    def minigame_corrida(self):
-        WIDTH, HEIGHT = self.largura, self.altura
-        janela = pygame.display.set_mode((WIDTH, HEIGHT))
-        pygame.display.set_caption("Running Minigame")
-
-        player_x = 50
-        player_y = HEIGHT // 2 - 25
-        player_speed = 10
-        goal_x = WIDTH - 100
-
-        last_key = None
-        total_time = 10
-        clock = pygame.time.Clock()
-
-        running = True
-        while running:
-            dt = clock.tick(60) / 1000
-            total_time -= dt
-
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-
-                if event.type == pygame.KEYDOWN:
-                    if total_time > 0:
-                        if event.key == pygame.K_q and last_key != 'q':
-                            player_x += player_speed
-                            last_key = 'q'
-                        if event.key == pygame.K_e and last_key != 'e':
-                            player_x += player_speed
-                            last_key = 'e'
-
-            if player_x >= goal_x:
-                self.calorias -= random.randint(200, 600)
-                return True
-
-            if total_time <= 0:
-                return False
-
-            janela.fill((221, 90, 17))
-            pygame.draw.rect(janela, (255, 255, 255), (goal_x, player_y - 150, 50, 400)) #meta
-            pygame.draw.rect(janela, (255, 255, 255), (0, player_y - 140, 900, 5))
-            pygame.draw.rect(janela, (255, 255, 255), (0, player_y - 75, 900, 5))
-            pygame.draw.rect(janela, (255, 255, 255), (0, player_y - 10, 900, 5))
-            pygame.draw.rect(janela, (255, 255, 255), (0, player_y + 55, 900, 5))
-            pygame.draw.rect(janela, (255, 255, 255), (0,  player_y + 120, 900, 5))
-            pygame.draw.rect(janela, (255, 255, 255), (0,  player_y + 185, 900, 5))
-            pygame.draw.rect(janela, (0, 255, 0), (player_x, player_y, 50, 50)) #player
-            pygame.draw.rect(janela, (0, 255, 0), (0, -65, 900, 300)) #relva
-            pygame.draw.rect(janela, (0, 255, 0), (0, 565, 900, 300)) #relva
-
-            font = pygame.font.SysFont(None, 40)
-            timer_text = font.render(f"Tempo restante: {total_time:.1f}s", True, (255, 255, 255))
-            janela.blit(timer_text, (20, 20))
-
-            finish = font.render("F I N I S H", True, (221, 90, 17))
-            finish_line = pygame.transform.rotate(finish, 270)
-            janela.blit(finish_line, (goal_x + 10, player_y - 40))
-
-            pygame.display.flip()
-        
-        return False
     
     def jogar(self):
         while True:
@@ -344,15 +300,17 @@ class SnakeGame:
                     return
                 if event.type == pygame.KEYDOWN:
                     if self.em_transicao:
-                        # Navegação no menu de fases
+                        num_opcoes = len(FUNDOS) + 1
                         if event.key == pygame.K_UP:
-                            self.fase_selecionada = (self.fase_selecionada - 1) % len(FUNDOS)
+                            self.fase_selecionada = (self.fase_selecionada - 1) % num_opcoes
                         elif event.key == pygame.K_DOWN:
-                            self.fase_selecionada = (self.fase_selecionada + 1) % len(FUNDOS)
+                            self.fase_selecionada = (self.fase_selecionada + 1) % num_opcoes
                         elif event.key == pygame.K_RETURN:
-                            self.mudar_para_fase(self.fase_selecionada)
+                            if self.fase_selecionada < len(FUNDOS):
+                                self.mudar_para_fase(self.fase_selecionada)
+                            else:
+                                self.executar_minijogo_aleatorio()
                     else:
-                        # Controles normais do jogo
                         if event.key == pygame.K_UP and self.direcao != Direcao.BAIXO:
                             self.direcao = Direcao.CIMA
                         elif event.key == pygame.K_DOWN and self.direcao != Direcao.CIMA:
@@ -395,7 +353,7 @@ class SnakeGame:
                 limite_frames = int(FUNDOS[self.fase_atual]['duracao'] * VELOCIDADE)
                 if self.contador_frames_fase >= limite_frames:
                     self.em_transicao = True
-                    self.fase_selecionada = list(FUNDOS.keys()).index(self.fase_atual)  # Opcional: manter seleção atual
+                    self.fase_selecionada = list(FUNDOS.keys()).index(self.fase_atual)
             
             self.desenhar_fundo()
             self.desenhar_cobra()

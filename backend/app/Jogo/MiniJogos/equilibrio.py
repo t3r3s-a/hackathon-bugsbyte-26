@@ -2,6 +2,7 @@ import pygame
 import sys
 import math
 import random
+import constantes
 
 # ======================
 # FUNÇÃO PRINCIPAL (chamada pelo test.py)
@@ -9,8 +10,7 @@ import random
 def minigame_equilibrio(calorias):
     pygame.init()
 
-    LARGURA, ALTURA = 600, 400
-    TELA = pygame.display.set_mode((LARGURA, ALTURA))
+    TELA = pygame.display.set_mode((constantes.LARGURA_JANELA, constantes.ALTURA_JANELA))
     pygame.display.set_caption("Equilíbrio na Cobra")
     clock = pygame.time.Clock()
 
@@ -21,7 +21,7 @@ def minigame_equilibrio(calorias):
         def __init__(self, num_seg):
             self.tamanho_celula = 20
             self.num_segmentos = num_seg
-            self.pivo = (LARGURA // 2, ALTURA - 100)  # base da cobra
+            self.pivo = (constantes.LARGURA_JANELA // 2, constantes.ALTURA_JANELA - 100)  # base da cobra
 
             # Posições relativas ao pivô (crescem para cima, y negativo)
             self.rel_pos = [(0, -i * self.tamanho_celula) for i in range(self.num_segmentos)]
