@@ -117,3 +117,4 @@ const handleRegister = () => {
 @keyframes float { 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-10px); } }
 @keyframes float-snake { 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-4px); } }
 </style>
+ 
