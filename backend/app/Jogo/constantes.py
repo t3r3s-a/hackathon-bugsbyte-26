@@ -10,9 +10,8 @@ ALTURA_JANELA = 800
 HUD_ALTURA = 80
 VELOCIDADE = 7
 
-DECAIMENTO_CALORIAS = 1
 CALORIAS_MIN = 0
-CALORIAS_MAX = 2000
+CALORIAS_MAX = 2500
 CALORIAS_INICIAL = 300
 
 # ========================================
@@ -36,7 +35,7 @@ FUNDOS = {
     'fase1': {
         'cor_principal': (70, 130, 180),
         'cor_grade': (60, 110, 160),
-        'nome': 'Oceano',
+        'nome': 'Pequeno-Almoço',
         'duracao': 10,
         'cols': 20,
         'rows': 16
@@ -44,15 +43,15 @@ FUNDOS = {
     'fase2': {
         'cor_principal': (75, 0, 130),
         'cor_grade': (60, 0, 110),
-        'nome': 'Espaço',
-        'duracao': 5,
+        'nome': 'Lanche da manhã',
+        'duracao': 10,
         'cols': 15,
         'rows': 12
     },
     'fase3': {
         'cor_principal': (210, 180, 140),
         'cor_grade': (190, 160, 120),
-        'nome': 'Deserto',
+        'nome': 'Almoço',
         'duracao': 20,
         'cols': 25,
         'rows': 20
@@ -60,33 +59,21 @@ FUNDOS = {
     'fase4': {
         'cor_principal': (34, 139, 34),
         'cor_grade': (28, 120, 28),
-        'nome': 'Floresta',
+        'nome': 'Lanche da tarde',
         'duracao': 10,
+        'cols': 30,
+        'rows': 24
+    },
+    'fase5': {
+        'cor_principal': (34, 139, 34),
+        'cor_grade': (28, 120, 28),
+        'nome': 'Jantar',
+        'duracao': 20,
         'cols': 30,
         'rows': 24
     }
 }
 
-# ========================================
-# FRUTAS
-# ========================================
-FRUTAS = [
-    {'emoji': '🍎', 'nome': 'Maçã', 'pontos': 100},
-    {'emoji': '🍊', 'nome': 'Laranja', 'pontos': 100},
-    {'emoji': '🍌', 'nome': 'Banana', 'pontos': 50},
-    {'emoji': '🍇', 'nome': 'Uvas', 'pontos': 50},
-    {'emoji': '🍓', 'nome': 'Morango', 'pontos': 50},
-    {'emoji': '🍒', 'nome': 'Cerejas', 'pontos': 150},
-    {'emoji': '🍑', 'nome': 'Pêssego', 'pontos': 100},
-    {'emoji': '🥝', 'nome': 'Kiwi', 'pontos': 150},
-    {'emoji': '🍍', 'nome': 'Ananás', 'pontos': 200},
-    {'emoji': '🥭', 'nome': 'Manga', 'pontos': 150},
-    {'emoji': '🍉', 'nome': 'Melancia', 'pontos': 250},
-    {'emoji': '🍋', 'nome': 'Limão', 'pontos': 120},
-    {'emoji': '🥥', 'nome': 'Coco', 'pontos': 300},
-    {'emoji': '🍈', 'nome': 'Melão', 'pontos': 200},
-    {'emoji': '🥑', 'nome': 'Abacate', 'pontos': 70}
-]
 
 # ========================================
 # DIREÇÕES
