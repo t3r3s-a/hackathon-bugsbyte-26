@@ -6,8 +6,6 @@ const password = ref('')
 
 const handleRegister = (event) => {
   event.preventDefault()
-  console.log('Dados de Registo:', username.value, password.value)
-  alert("Conta criada!")
 }
 </script>
 
@@ -22,8 +20,8 @@ const handleRegister = (event) => {
       </div>
       
       <div class="field">
-        <label>Senha</label>
-        <input v-model="password" type="password" placeholder="Nova senha" />
+        <label>Palavra-passe</label>
+        <input v-model="password" type="password" placeholder="Nova palavra-passe" />
       </div>
 
       <button type="submit" style="background-color: #3498db;">Registar</button>
