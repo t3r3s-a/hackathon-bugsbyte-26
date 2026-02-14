@@ -72,6 +72,29 @@
             "email": "jorge@",
             "password": "jorge",
             "questionnaire": null
+        },
+        {
+            "username": "pou",
+            "email": "pou@gmail.com",
+            "password": "pou",
+            "questionnaire": {
+                "username": "pou",
+                "idade": 10,
+                "peso": 82.0,
+                "altura": 100.0,
+                "sexo": "Masculino",
+                "faz_desporto": "sim",
+                "frequencia_desporto": 5,
+                "brinca_na_rua": "sim",
+                "alergias": [
+                    "amendoim",
+                    "ovos",
+                    "mostarda"
+                ],
+                "quem_cozinha": "outros",
+                "quem_cozinha_outro": "gustavo",
+                "come_na_cantina": "sim"
+            }
         }
     ]
 }
