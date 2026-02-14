@@ -3,6 +3,9 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
 
+// Import da logo de parceria
+import logoParceria from "../assets/logo-parceria.png"; 
+
 const router = useRouter();
 const username = ref("");
 const email = ref("");
@@ -10,78 +13,36 @@ const password = ref("");
 
 const handleRegister = async () => {
   try {
-    // 1. Chamada ao backend para criar o utilizador
     const response = await axios.post("http://127.0.0.1:8000/users/register", {
       username: username.value,
       email: email.value,
       password: password.value,
     });
 
-    // 2. AUTO-LOGIN: Se o registo deu certo, guardamos logo o nome no localStorage
-    // Assim ele não precisa de fazer login outra vez agora.
     localStorage.setItem("usuario_logado", username.value);
-
-    // 3. Sucesso e redirecionamento direto para o Questionário
-    alert("Bem-vindo à família Nutrium! Vamos configurar o teu perfil.");
     router.push("/questionnaire"); 
     
   } catch (error) {
     console.error("Erro no registo:", error);
-    alert(
-      error.response?.data?.detail || "Erro ao registar. Tenta outro nome."
-    );
   }
 };
 </script>
 
 <template>
   <div class="view-wrapper">
-    <div class="card register-card">
-      <div class="logo-area">
-        <div class="logo-shadow">
-          <div class="logo-wrapper">
-            <svg width="96" height="96" viewBox="0 0 96 96">
-              <rect width="96" height="96" rx="22" fill="#27ae60" />
-              <path
-                d="M48 24C42 30 36 34 36 42C36 48 42 54 48 60C54 54 60 48 60 42C60 34 54 30 48 24Z"
-                fill="white"
-              />
-            </svg>
+    <div class="decor-blob blob-1"></div>
+    <div class="decor-blob blob-2"></div>
+    <div class="decor-blob blob-3"></div>
 
-            <svg
-              class="snake-overlay"
-              width="100"
-              height="100"
-              viewBox="0 0 72 72"
-            >
-              <defs>
-                <linearGradient
-                  id="snakeGrad"
-                  x1="0%"
-                  y1="0%"
-                  x2="100%"
-                  y2="100%"
-                >
-                  <stop offset="0%" stop-color="#f39c12" />
-                  <stop offset="100%" stop-color="#e67e22" />
-                </linearGradient>
-              </defs>
-              <path
-                d="M16 44C20 38 26 42 30 36C34 30 32 24 36 20C40 16 44 22 42 28C40 34 44 36 48 32"
-                stroke="url(#snakeGrad)"
-                stroke-width="4"
-                stroke-linecap="round"
-                fill="none"
-              />
-            </svg>
-          </div>
-        </div>
-        <h1 class="brand">Nutrium <span class="snake-text">Snack-e</span></h1>
-        <p class="tagline">Começa a tua jornada saudável hoje!</p>
+    <div class="register-container">
+      <div class="header-section">
+        <img :src="logoParceria" alt="Nutrium x Snack-e" class="brand-logo" />
+        <h1 class="title">Criar Conta</h1>
+        <p class="subtitle">Junta-te a nós nesta aventura saudável!</p>
       </div>
 
-      <form @submit.prevent="handleRegister" class="form-area">
-        <div class="input-group">
+      <form @submit.prevent="handleRegister" class="form-content">
+        <div class="field">
           <label>Nome de Utilizador</label>
           <input
             v-model="username"
@@ -91,8 +52,8 @@ const handleRegister = async () => {
           />
         </div>
 
-        <div class="input-group">
-          <label>Email Profissional</label>
+        <div class="field">
+          <label>Email</label>
           <input
             v-model="email"
             type="email"
@@ -101,7 +62,7 @@ const handleRegister = async () => {
           />
         </div>
 
-        <div class="input-group">
+        <div class="field">
           <label>Palavra-passe</label>
           <input
             v-model="password"
@@ -111,139 +72,116 @@ const handleRegister = async () => {
           />
         </div>
 
-        <button type="submit" class="btn">Criar Conta Grátis</button>
-
-        <div class="extra">
-          <span>Já és membro?</span>
-          <router-link to="/" class="extra-button">Fazer Login</router-link>
-        </div>
+        <button type="submit" class="btn-main">Começar Agora</button>
       </form>
+
+      <div class="footer-section">
+        <p>Já és membro?</p>
+        <router-link to="/login" class="btn-ghost">Fazer Login</router-link>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-/* Aproveitando o teu estilo excelente e polindo alguns detalhes */
+
 .view-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: #f8fafd; /* Fundo ligeiramente mais limpo */
-}
-
-.card {
-  position: relative;
-  width: 100%;
-  max-width: 440px;
-  padding: 40px;
-  border-radius: 32px;
-  text-align: center;
-  background: white;
-  border: 1px solid rgba(0,0,0,0.05);
-  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.08);
-  animation: float 6s ease-in-out infinite;
-}
-
-.tagline {
-    color: #888;
-    font-size: 14px;
-    margin-bottom: 25px;
-}
-
-.logo-wrapper {
-  position: relative;
-  width: 96px;
-  height: 96px;
-  margin: 0 auto 20px auto;
-}
-.logo-shadow {
-  filter: drop-shadow(0 15px 30px rgba(39, 174, 96, 0.3));
-}
-.brand {
-  font-weight: 800;
-  font-size: 28px;
-  color: #2d3436;
-}
-.snake-text {
-  background: linear-gradient(90deg, #f39c12, #e67e22);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.snake-overlay {
-  position: absolute;
-  top: -6px;
-  left: -6px;
-  filter: drop-shadow(0 0 10px rgba(255, 140, 0, 0.5));
-}
-
-.input-group {
-  text-align: left;
-  margin-bottom: 18px;
-}
-.input-group label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
-  color: #27ae60;
-  margin-bottom: 8px;
-  display: block;
-}
-.input-group input {
-  width: 100%;
-  padding: 15px;
-  border-radius: 16px;
-  border: 2px solid #f1f3f5;
   background: #f8fafc;
-  transition: all 0.3s ease;
-}
-.input-group input:focus {
-  border-color: #27ae60;
-  background: white;
-  outline: none;
-  box-shadow: 0 0 0 4px rgba(39, 174, 96, 0.1);
+  font-family: 'Inter', sans-serif;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
 }
 
-.btn {
+/* Blobs Animados */
+.decor-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  z-index: 0;
+  opacity: 0.5;
+  animation: move 20s infinite alternate;
+}
+
+.blob-1 { width: 450px; height: 450px; background: #dcfce7; top: -150px; left: -100px; }
+.blob-2 { width: 350px; height: 350px; background: #47baac33; bottom: -50px; right: -50px; animation-delay: -5s; }
+.blob-3 { width: 300px; height: 300px; background: #fef9c3; top: 10%; right: 10%; animation-delay: -10s; }
+
+@keyframes move {
+  from { transform: translate(0, 0) scale(1); }
+  to { transform: translate(60px, 80px) scale(1.1); }
+}
+
+/* Card Register */
+.register-container {
   width: 100%;
-  padding: 18px;
-  margin-top: 15px;
-  border-radius: 50px;
-  border: none;
-  font-weight: 800;
-  font-size: 15px;
-  text-transform: uppercase;
-  cursor: pointer;
-  background: #2d3436; /* Cor escura para contraste como no questionário */
+  max-width: 420px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 40px;
+  border-radius: 28px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  position: relative;
+  z-index: 1;
+  backdrop-filter: blur(12px);
+}
+
+.header-section { text-align: center; margin-bottom: 30px; }
+.brand-logo { height: 42px; margin-bottom: 16px; }
+.title { font-size: 1.6rem; color: #1e293b; font-weight: 700; }
+.subtitle { font-size: 0.9rem; color: #64748b; }
+
+.form-content { display: flex; flex-direction: column; gap: 18px; }
+.field { display: flex; flex-direction: column; gap: 6px; text-align: left; }
+.field label { font-size: 0.75rem; font-weight: 700; color: #47baac; text-transform: uppercase; letter-spacing: 0.05em; }
+
+.field input {
+  padding: 14px;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.field input:focus {
+  outline: none;
+  border-color: #47baac;
+  background: white;
+  box-shadow: 0 0 0 4px rgba(71, 186, 172, 0.1);
+}
+
+.btn-main {
+  background: #47baac;
   color: white;
-  transition: all 0.3s ease;
-}
-
-.btn:hover {
-  background: #27ae60;
-  transform: translateY(-3px);
-  box-shadow: 0 15px 30px rgba(39, 174, 96, 0.3);
-}
-
-.extra {
-  margin-top: 25px;
-  font-size: 14px;
-  color: #636e72;
-}
-.extra-button {
-  margin-left: 8px;
-  color: #27ae60;
+  padding: 16px;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
   font-weight: 700;
-  text-decoration: none;
-}
-.extra-button:hover {
-  text-decoration: underline;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 10px;
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-12px); }
+.btn-main:hover {
+  background: #3a968a;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 15px rgba(71, 186, 172, 0.2);
 }
+
+.footer-section {
+  margin-top: 25px;
+  text-align: center;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 20px;
+}
+
+.footer-section p { font-size: 0.85rem; color: #64748b; margin-bottom: 5px; }
+.btn-ghost { color: #47baac; font-weight: 700; text-decoration: none; font-size: 0.9rem; }
+.btn-ghost:hover { text-decoration: underline; }
 </style>
