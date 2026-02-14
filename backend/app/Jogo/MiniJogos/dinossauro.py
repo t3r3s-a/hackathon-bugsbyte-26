@@ -1,11 +1,11 @@
 import pygame
 import random
+import constantes
 
 def minigame_dinossauro(calorias):
     pygame.init()
 
-    LARGURA_JANELA, ALTURA_JANELA = 900, 400
-    GROUND_Y = ALTURA_JANELA - 80
+    GROUND_Y = constantes.ALTURA_JANELA - 80
 
     GRAVITY = 0.8
     JUMP_FORCE = -12
@@ -16,7 +16,7 @@ def minigame_dinossauro(calorias):
     DIST_SEG = 30
     DELAY_FRAMES = max(1, DIST_SEG // OBS_SPEED)
 
-    screen = pygame.display.set_mode((LARGURA_JANELA, ALTURA_JANELA))
+    screen = pygame.display.set_mode((constantes.LARGURA_JANELA, constantes.ALTURA_JANELA))
     pygame.display.set_caption("Minijogo Dinossauro")
     clock = pygame.time.Clock()
 
@@ -35,7 +35,7 @@ def minigame_dinossauro(calorias):
 
     def spawn_obstaculo():
         h = random.randint(30, 60)
-        obstaculos.append(pygame.Rect(LARGURA_JANELA, GROUND_Y - h, 20, h))
+        obstaculos.append(pygame.Rect(constantes.LARGURA_JANELA, GROUND_Y - h, 20, h))
 
     tempo = 10.0
 
@@ -101,7 +101,7 @@ def minigame_dinossauro(calorias):
             return random.randint(100, 200)
 
         screen.fill((30, 30, 30))
-        pygame.draw.rect(screen, (70, 70, 70), (0, GROUND_Y + 10, LARGURA_JANELA, 100))
+        pygame.draw.rect(screen, (70, 70, 70), (0, GROUND_Y + 10, constantes.LARGURA_JANELA, 100))
 
         for obs in obstaculos:
             pygame.draw.rect(screen, (200, 50, 50), obs)

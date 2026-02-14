@@ -24,10 +24,10 @@ def minigame_corrida(calorias):
                 sys.exit()
             if event.type == pygame.KEYDOWN:
                 if total_time > 0:
-                    if event.key == pygame.K_q and last_key != 'q':
+                    if event.key == pygame.K_LEFT and last_key != 'q':
                         player_x += player_speed
                         last_key = 'q'
-                    if event.key == pygame.K_e and last_key != 'e':
+                    if event.key == pygame.K_RIGHT and last_key != 'e':
                         player_x += player_speed
                         last_key = 'e'
         if player_x >= goal_x:

@@ -1,27 +1,22 @@
 import pygame
-import sys
 import math
 import random
 import constantes
 
-# ======================
-# FUNÇÃO PRINCIPAL (chamada pelo test.py)
-# ======================
 def minigame_equilibrio(calorias):
     pygame.init()
-
     TELA = pygame.display.set_mode((constantes.LARGURA_JANELA, constantes.ALTURA_JANELA))
     pygame.display.set_caption("Equilíbrio na Cobra")
     clock = pygame.time.Clock()
 
-    # Número de segmentos baseado nas calorias (igual ao dinossauro)
-    num_segmentos = 6
+    # Número de segmentos baseado nas calorias
+    num_segmentos = max(1, calorias // 100)
 
     class CobraEquilibrio:
         def __init__(self, num_seg):
             self.tamanho_celula = 20
             self.num_segmentos = num_seg
-            self.pivo = (constantes.LARGURA_JANELA // 2, constantes.ALTURA_JANELA - 100)  # base da cobra
+            self.pivo = (constantes.LARGURA_JANELA // 2, constantes.ALTURA_JANELA - 100)
 
             # Posições relativas ao pivô (crescem para cima, y negativo)
             self.rel_pos = [(0, -i * self.tamanho_celula) for i in range(self.num_segmentos)]
@@ -48,9 +43,9 @@ def minigame_equilibrio(calorias):
 
         def atualizar_equilibrio(self, teclas):
             # Torque do jogador
-            if teclas[pygame.K_a]:
+            if teclas[pygame.K_LEFT]:
                 self.vel_angular -= 0.005
-            if teclas[pygame.K_d]:
+            if teclas[pygame.K_RIGHT]:
                 self.vel_angular += 0.005
 
             # Perturbação externa
@@ -65,7 +60,7 @@ def minigame_equilibrio(calorias):
             self.angulo += self.vel_angular
 
             # Verifica se perdeu
-            return abs(self.angulo) <= 0.9  # True se ainda está equilibrando
+            return abs(self.angulo) <= 0.9
 
         def desenhar(self, tela):
             # Desenha os segmentos
@@ -110,53 +105,34 @@ def minigame_equilibrio(calorias):
     rodando = True
 
     while rodando:
-        dt = clock.tick(60) / 1000  # delta em segundos
+        dt = clock.tick(60) / 1000
         tempo_restante -= dt
 
-        # Processa eventos
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                return 0
+                return -1  # usuário fechou a janela
 
-        # Captura teclas
         teclas = pygame.key.get_pressed()
 
-        # Atualiza estado do jogo
         if not cobra.atualizar_equilibrio(teclas):
             # Perdeu (caiu)
             break
 
-        # Se tempo acabou, venceu
         if tempo_restante <= 0:
+            # Venceu
             break
 
-        # Desenha tudo
         TELA.fill((255, 255, 255))
         cobra.desenhar(TELA)
 
-        # Mostra o tempo na tela
         fonte = pygame.font.Font(None, 30)
         texto_tempo = fonte.render(f"{tempo_restante:.1f}s", True, (0, 0, 0))
         TELA.blit(texto_tempo, (10, 10))
 
         pygame.display.flip()
 
-    # Fim do jogo
-    pygame.quit()
-
+    # Não chame pygame.quit() aqui!
     if tempo_restante <= 0:
-        # Sobreviveu: retorna ganho aleatório entre 100 e 200
         return random.randint(100, 200)
     else:
-        # Morreu: retorna 0
         return 0
-
-
-# ======================
-# Bloco de teste (opcional, para executar diretamente)
-# ======================
-if __name__ == "__main__":
-    # Exemplo: testa com 300 calorias (3 segmentos)
-    resultado = minigame_equilibrio(600)
-    print(f"Resultado do jogo: {resultado}")

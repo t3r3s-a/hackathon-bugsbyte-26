@@ -680,23 +680,6 @@ alimentos = [
         "cor": "verde"
     },
     {
-        "nome": "Sopa de tomate (sumo/puré)",
-        "energia_kcal": 18,
-        "proteina_g": 0.9,
-        "hidratos_g": 3.9,
-        "acucares_g": 2.6,
-        "lipidos_g": 0.2,
-        "agua_g": 94,
-        "vitamina_c_mg": 13.7,
-        "vitamina_a_ug": 42,
-        "potassio_mg": 237,
-        "calcio_mg": 10,
-        "ferro_mg": 0.3,
-        "alergias": [],
-        "descricao": "Leve e hidratante — boa forma de comer tomate. Aconselhável (verde).",
-        "cor": "verde"
-    },
-    {
         "nome": "Pão de centeio",
         "energia_kcal": 259,
         "proteina_g": 9,
