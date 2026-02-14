@@ -72,6 +72,54 @@
             "email": "jorge@",
             "password": "jorge",
             "questionnaire": null
+        },
+        {
+            "username": "pou",
+            "email": "pou@gmail.com",
+            "password": "pou",
+            "questionnaire": {
+                "username": "pou",
+                "idade": 10,
+                "peso": 82.0,
+                "altura": 100.0,
+                "sexo": "Masculino",
+                "faz_desporto": "sim",
+                "frequencia_desporto": 5,
+                "brinca_na_rua": "sim",
+                "alergias": [
+                    "amendoim",
+                    "ovos",
+                    "mostarda"
+                ],
+                "quem_cozinha": "outros",
+                "quem_cozinha_outro": "gustavo",
+                "come_na_cantina": "sim"
+            }
+        },
+        {
+            "username": "teresa2",
+            "email": "teresa@gmail.com",
+            "password": "teresa2",
+            "questionnaire": {
+                "username": "teresa2",
+                "idade": 19,
+                "peso": 57.0,
+                "altura": 166.0,
+                "sexo": "Feminino",
+                "faz_desporto": "nao",
+                "frequencia_desporto": 0,
+                "brinca_na_rua": "nao",
+                "alergias": [],
+                "quem_cozinha": "mae",
+                "quem_cozinha_outro": "",
+                "come_na_cantina": "nao"
+            }
+        },
+        {
+            "username": "teresa3",
+            "email": "teresa3@gmail.com",
+            "password": "teresa3",
+            "questionnaire": null
         }
     ]
 }

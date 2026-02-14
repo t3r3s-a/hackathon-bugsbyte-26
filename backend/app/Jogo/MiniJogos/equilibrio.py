@@ -2,11 +2,26 @@ import pygame
 import math
 import random
 import constantes
+import os
 
 def minigame_equilibrio(calorias):
     pygame.init()
     TELA = pygame.display.set_mode((constantes.LARGURA_JANELA, constantes.ALTURA_JANELA))
     pygame.display.set_caption("Equilíbrio na Cobra")
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+    caminho_bg = os.path.join(BASE_DIR, "Fundos", "background_equilibrio.png")
+    background = pygame.image.load(caminho_bg).convert()
+    background = pygame.transform.scale(
+        background,
+        (constantes.LARGURA_JANELA, constantes.ALTURA_JANELA)
+    )
+
+    ALTURA_CHAO = 100
+    caminho_chao = os.path.join(BASE_DIR, "Fundos", "chao_equilibrio.png")
+    chao_img = pygame.image.load(caminho_chao).convert_alpha()
+    chao_img = pygame.transform.scale(chao_img, (constantes.LARGURA_JANELA, ALTURA_CHAO))
+
     clock = pygame.time.Clock()
 
     # Número de segmentos baseado nas calorias
@@ -16,7 +31,7 @@ def minigame_equilibrio(calorias):
         def __init__(self, num_seg):
             self.tamanho_celula = 20
             self.num_segmentos = num_seg
-            self.pivo = (constantes.LARGURA_JANELA // 2, constantes.ALTURA_JANELA - 100)
+            self.pivo = (constantes.LARGURA_JANELA // 2, constantes.ALTURA_JANELA - ALTURA_CHAO)
 
             # Posições relativas ao pivô (crescem para cima, y negativo)
             self.rel_pos = [(0, -i * self.tamanho_celula) for i in range(self.num_segmentos)]
@@ -33,7 +48,7 @@ def minigame_equilibrio(calorias):
             # Cores
             self.verde_escuro = (0, 100, 0)
             self.verde = (0, 200, 0)
-            self.vermelho = (200, 0, 0)
+            self.vermelho = (255, 0, 0)
 
         def aplicar_rotacao(self, ponto, angulo):
             cos_a = math.cos(angulo)
@@ -83,8 +98,8 @@ def minigame_equilibrio(calorias):
 
             # Seta indicando direção da perturbação
             if self.direcao_perturbacao != 0:
-                centro = (self.pivo[0], self.pivo[1] + 30)
-                fim = (centro[0] + self.direcao_perturbacao * 40, centro[1])
+                centro = (self.pivo[0] + self.direcao_perturbacao * 80, self.pivo[1] + 30)
+                fim = (centro[0] + self.direcao_perturbacao * 75, centro[1])
                 pygame.draw.line(tela, self.vermelho, centro, fim, 4)
                 if self.direcao_perturbacao > 0:
                     pygame.draw.polygon(tela, self.vermelho,
@@ -122,7 +137,9 @@ def minigame_equilibrio(calorias):
             # Venceu
             break
 
-        TELA.fill((255, 255, 255))
+        TELA.blit(background, (0, 0))
+        TELA.blit(chao_img, (10, constantes.ALTURA_JANELA - ALTURA_CHAO))
+
         cobra.desenhar(TELA)
 
         fonte = pygame.font.Font(None, 30)

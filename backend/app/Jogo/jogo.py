@@ -13,14 +13,15 @@ class SnakeGame:
         self.largura = LARGURA_JANELA
         self.altura = ALTURA_JANELA
         self.display = pygame.display.set_mode((self.largura, self.altura))
-        pygame.display.set_caption('Snake Game - Calorias')
+        pygame.display.set_caption('Nutrium Snack-e')
         self.clock = pygame.time.Clock()
         
-        self.font_score = pygame.font.Font(None, 30)
-        self.font_alimento = pygame.font.Font(None, 50)
-        self.font_fase = pygame.font.Font(None, 25)
-        self.font_calorias = pygame.font.Font(None, 25)
-        self.font_transicao = pygame.font.Font(None, 48)
+        # Fontes corrigidas e alinhadas
+        self.font_score = pygame.font.SysFont("Arial", 26, bold=True)
+        self.font_alimento = pygame.font.SysFont("Arial", 40)
+        self.font_fase = pygame.font.SysFont("Arial", 18)
+        self.font_calorias = pygame.font.SysFont("Arial", 18, bold=True)
+        self.font_transicao = pygame.font.SysFont("Arial", 30, bold=True)
 
         self.caminho_base = os.path.dirname(__file__)
         
@@ -150,7 +151,7 @@ class SnakeGame:
         self.display = pygame.display.set_mode((self.largura, self.altura))
         pygame.display.set_caption('Snake Game - Calorias')
 
-        if resultado == -1:  # usuário fechou a janela
+        if resultado == -1:
             pygame.quit()
             sys.exit()
 
@@ -222,28 +223,30 @@ class SnakeGame:
             self.cobra.pop()
     
     def game_over(self):
-        self.display.fill(PRETO)
+        # Cores atualizadas para o novo tema
+        COR_BG = (24, 24, 27)
+        COR_LARANJA = (249, 115, 22)
+        COR_BRANCO = (250, 250, 249)
+
+        self.display.fill(COR_BG)
         textos = [
-            self.font_score.render('GAME OVER!', True, VERMELHO),
-            self.font_score.render(f'Pontuação Final: {self.pontuacao}', True, BRANCO),
-            self.font_score.render(f'Calorias: {int(self.calorias)}', True, BRANCO),
-            self.font_fase.render('Pressione ESPAÇO para jogar novamente', True, BRANCO)
+            self.font_transicao.render('GAME OVER!', True, (239, 68, 68)), # Vermelho
+            self.font_score.render(f'Pontuação Final: {self.pontuacao}', True, COR_LARANJA),
+            self.font_score.render(f'Calorias: {int(self.calorias)}', True, COR_BRANCO),
+            self.font_fase.render('Pressione ESPAÇO para jogar novamente', True, (148, 163, 184))
         ]
         y = self.altura // 2 - 80
         for texto in textos:
             self.display.blit(texto, (self.largura//2 - texto.get_width()//2, y))
-            y += 40
+            y += 50
         pygame.display.flip()
         
-        esperando = True
-        while esperando:
+        while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     return False
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                    esperando = False
                     return True
-        return True
     
     def jogar(self):
         while True:
@@ -305,14 +308,10 @@ class SnakeGame:
                         pygame.quit()
                         return
                 
-                comeu = self.verificar_alimento()
-                if comeu:
+                if self.verificar_alimento():
                     self.calorias += self.alimento_atual['energia_kcal']
                     self.pontuacao += self.alimento_atual['energia_kcal']
-                    desejado_antes = max(1, int((self.calorias - self.alimento_atual['energia_kcal']) // 100))
-                    desejado_depois = max(1, int(self.calorias // 100))
-                    for _ in range(desejado_depois - desejado_antes):
-                        self.cobra.append(self.cobra[-1])
+                    self.ajustar_tamanho()
                     self.colocar_alimento()
                 
                 if self.calorias <= CALORIAS_MIN or self.calorias >= CALORIAS_MAX:
@@ -329,7 +328,7 @@ class SnakeGame:
                 if self.contador_frames_fase >= limite_frames:
                     self.preparar_menu_transicao()
             
-            # Desenho
+            # Chamadas para o módulo desenho externo
             desenho.desenhar_fundo(self)
             desenho.desenhar_cobra(self)
             desenho.desenhar_alimento(self)

@@ -1,7 +1,6 @@
 <template>
   <!-- Fundo fixo -->
   <div class="app-background">
-    <img alt="nutrium logo" src="./assets/logo-nutrium.png" class="logo" />
     <div class="glow glow-1"></div>
     <div class="glow glow-2"></div>
   </div>
