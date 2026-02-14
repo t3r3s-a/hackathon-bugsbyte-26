@@ -25,6 +25,18 @@ class SnakeGame:
 
         self.caminho_base = os.path.dirname(__file__)
         
+        # Pré-carrega a imagem da cabeça da cobra (rodada)
+        try:
+            caminho_cabeca = os.path.join(self.caminho_base, "assets", "cabeca_snake.png")
+            img_cabeca = pygame.image.load(caminho_cabeca).convert_alpha()
+            self.img_cabeca_original = img_cabeca
+        except:
+            self.img_cabeca_original = None
+
+        # Para cache do alimento
+        self.imagem_alimento_cache = None
+        self.nome_alimento_cache = None
+
         # Lista ordenada das fases (refeições)
         self.ordem_refeicoes = ['fase1', 'fase2', 'fase3', 'fase4', 'fase5']
         self.indice_refeicao_atual = 0
@@ -80,9 +92,8 @@ class SnakeGame:
     def colocar_alimento(self):
         tentativas = 0
         max_tentativas = 1000
-
         nomes_fase = FUNDOS[self.fase_atual]['alimentos_nomes']
-
+    
         while tentativas < max_tentativas:
             col = random.randint(0, self.grid_cols - 1)
             row = random.randint(0, self.grid_rows - 1)
@@ -90,14 +101,25 @@ class SnakeGame:
             y = self.grid_offset_y + row * self.tamanho_celula
             if [x, y] not in self.cobra:
                 self.alimento_pos = [x, y]
-
                 nome_escolhido = random.choice(nomes_fase)
                 self.alimento_atual = ALIMENTOS_DICT[nome_escolhido]
-
+    
+                # --- Carregar a imagem ---
                 nome_img = self.alimento_atual["nome"] + ".png"
                 self.caminho_imagem_alimento = os.path.join(
                     self.caminho_base, "assets", nome_img
                 )
+                try:
+                    img_orig = pygame.image.load(self.caminho_imagem_alimento).convert_alpha()
+                    # Redimensiona para o tamanho da célula atual e guarda em cache
+                    self.imagem_alimento_cache = pygame.transform.smoothscale(
+                        img_orig, (self.tamanho_celula, self.tamanho_celula)
+                    )
+                    self.nome_alimento_cache = self.alimento_atual["nome"]
+                except Exception as e:
+                    print(f"Erro ao carregar imagem {self.caminho_imagem_alimento}: {e}")
+                    self.imagem_alimento_cache = None
+                # ---------------------------------
                 return
             tentativas += 1
         self.game_over()
@@ -192,6 +214,9 @@ class SnakeGame:
         self.opcao_selecionada = 0
 
     def mover_cobra(self):
+        if hasattr(self, 'proxima_direcao'):
+            self.direcao = self.proxima_direcao
+            del self.proxima_direcao
         cabeca = self.cobra[0].copy()
         if self.direcao == Direcao.DIREITA:
             cabeca[0] += self.tamanho_celula
@@ -283,13 +308,13 @@ class SnakeGame:
                                 return
                     else:  # estado "jogando"
                         if event.key == pygame.K_UP and self.direcao != Direcao.BAIXO:
-                            self.direcao = Direcao.CIMA
+                            self.proxima_direcao = Direcao.CIMA
                         elif event.key == pygame.K_DOWN and self.direcao != Direcao.CIMA:
-                            self.direcao = Direcao.BAIXO
+                            self.proxima_direcao = Direcao.BAIXO
                         elif event.key == pygame.K_LEFT and self.direcao != Direcao.DIREITA:
-                            self.direcao = Direcao.ESQUERDA
+                            self.proxima_direcao = Direcao.ESQUERDA
                         elif event.key == pygame.K_RIGHT and self.direcao != Direcao.ESQUERDA:
-                            self.direcao = Direcao.DIREITA
+                            self.proxima_direcao = Direcao.DIREITA
             
             if self.estado == "jogando":
                 self.mover_cobra()
@@ -311,7 +336,11 @@ class SnakeGame:
                 if self.verificar_alimento():
                     self.calorias += self.alimento_atual['energia_kcal']
                     self.pontuacao += self.alimento_atual['energia_kcal']
-                    self.ajustar_tamanho()
+                    # Crescimento da cobra
+                    desejado_antes = max(1, int((self.calorias - self.alimento_atual['energia_kcal']) // 100))
+                    desejado_depois = max(1, int(self.calorias // 100))
+                    for _ in range(desejado_depois - desejado_antes):
+                        self.cobra.append(self.cobra[-1])  # adiciona um novo segmento na posição do último
                     self.colocar_alimento()
                 
                 if self.calorias <= CALORIAS_MIN or self.calorias >= CALORIAS_MAX:
