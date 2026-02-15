@@ -15,19 +15,31 @@ const baixarPlano = async () => {
   try {
     const response = await axios.post(`http://127.0.0.1:8000/plano/gerar-pdf`, 
       { username: usuario }, 
-      { responseType: 'blob' }
+      { responseType: 'blob' } // OBRIGATÓRIO para ficheiros
     );
-    // ... lógica de download (URL.createObjectURL) ...
+
+    // 1. Criar um URL temporário para o ficheiro que veio do backend
+    const blob = new Blob([response.data], { type: 'application/pdf' });
+    const url = window.URL.createObjectURL(blob);
+
+    // 2. Criar um elemento <a> escondido para simular o clique de download
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Plano_Nutricional_${usuario}.pdf`); // Nome do ficheiro
+
+    // 3. Adicionar ao documento, clicar e remover
+    document.body.appendChild(link);
+    link.click();
     
-    // Opcional: Bloquear o botão localmente após sucesso
-    jaDescarregou.value = true; 
+    // Limpeza
+    link.remove();
+    window.URL.revokeObjectURL(url);
+
+    alert("🚀 Plano gerado com sucesso! Verifica a tua pasta de downloads.");
 
   } catch (error) {
-    if (error.response && error.response.status === 403) {
-      alert("🚀 Oops! Já tens o teu plano. Só podes fazer o download uma vez para focares na tua missão!");
-    } else {
-      alert("Erro ao gerar o plano.");
-    }
+    console.error("Erro detalhado:", error);
+    alert("Erro ao gerar o plano. Verifica se o servidor está a correr.");
   } finally {
     loading.value = false;
   }

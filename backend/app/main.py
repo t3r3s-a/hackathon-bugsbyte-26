@@ -7,7 +7,7 @@ from app.routes import user_routes
 from app.routes import plano
 
 app = FastAPI(title="Nutrium Backend")
-
+app.include_router(plano.router, prefix="/plano", tags=["Plano"])
 game_build_path = os.path.join(os.path.dirname(__file__), "Jogo", "build", "web")
 if os.path.exists(game_build_path):
     app.mount("/play-game", StaticFiles(directory=game_build_path, html=True), name="snake")

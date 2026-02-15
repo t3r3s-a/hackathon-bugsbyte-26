@@ -223,6 +223,54 @@
                 "quem_cozinha_outro": "",
                 "come_na_cantina": "nao"
             }
+        },
+        {
+            "username": "monke",
+            "email": "monke@monke.monke",
+            "password": "monkemonke",
+            "questionnaire": {
+                "username": "monke",
+                "idade": 67,
+                "peso": 67.0,
+                "altura": 167.0,
+                "sexo": "Masculino",
+                "faz_desporto": "nao",
+                "frequencia_desporto": 0,
+                "brinca_na_rua": "nao",
+                "alergias": [
+                    "amendoim",
+                    "avel\u00e3",
+                    "castanha",
+                    "pistachio",
+                    "am\u00eandoa",
+                    "nozes"
+                ],
+                "quem_cozinha": "pai",
+                "quem_cozinha_outro": "",
+                "come_na_cantina": "nao"
+            }
+        },
+        {
+            "username": "berto",
+            "email": "berto@berto.berto",
+            "password": "bertoberto",
+            "questionnaire": {
+                "username": "berto",
+                "idade": 67,
+                "peso": 67.0,
+                "altura": 67.0,
+                "sexo": "Feminino",
+                "faz_desporto": "sim",
+                "frequencia_desporto": 7,
+                "brinca_na_rua": "nao",
+                "alergias": [
+                    "leite e derivados",
+                    "pistachio"
+                ],
+                "quem_cozinha": "avos",
+                "quem_cozinha_outro": "",
+                "come_na_cantina": "nao"
+            }
         }
     ]
 }

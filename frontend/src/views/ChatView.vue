@@ -25,11 +25,12 @@ const scrollToBottom = async () => {
 };
 
 const sendQuestion = async () => {
-  if (!question.value.trim() || loading.value) return;
+  // Remove only leading/trailing spaces, but allow spaces in the middle
+  if (!question.value || loading.value) return;
 
-  const userMsg = question.value;
+  const userMsg = question.value.trim(); // Trim spaces only for sending
   messages.value.push({ text: userMsg, isAi: false });
-  question.value = "";
+  question.value = ""; // Clear the input field
   loading.value = true;
   await scrollToBottom();
 

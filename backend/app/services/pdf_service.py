@@ -42,35 +42,13 @@ class NutriumFormalPDF(FPDF):
 def criar_pdf_real(username: str, user_data: dict):
     q = user_data.get("questionnaire", {})
     
-    alergias = ", ".join(q.get('alergias', [])) if q.get('alergias') else "Nenhuma"
-
     # Prompt otimizado para a tua IA privada (OpenAI)
     prompt = f"""
-    És um Nutricionista Pediátrico Especialista. Cria um plano rigoroso para o {username}.
-    
-    DADOS DO PACIENTE:
-    - Idade: {q.get('idade')} anos
-    - Sexo: {q.get('sexo')}
-    - Peso: {q.get('peso')}kg | Altura: {q.get('altura')}cm
-    - Atividade Física: {q.get('faz_desporto')} ({q.get('frequencia_desporto')}x/semana)
-    - Alergias (PROIBIDO): {alergias}
-
-    LOGICA DE ANÁLISE:
-    1. Analisa a relação Peso/Altura: 
-       - Se o peso for baixo para a altura: O plano deve ser HIPERCALÓRICO. Incentiva a comer mais proteínas e hidratos complexos para ganhar força e "combustível".
-       - Se o peso for elevado para a altura: O plano deve focar em CONTROLO DE PORÇÕES, fibras e densidade nutricional, sem ser restritivo demais (é uma criança).
-    2. Ajusta as calorias para o nível de desporto ({q.get('frequencia_desporto')}x semana).
-    3. Dá ordens claras: "Come isto", "Evita aquilo".
-
-    ESTRUTURA DO PDF (NÃO USAR MARKDOWN):
-    - Pequeno Pequeno-almoço: [Refeição]
-    - Lanche da Manhã: [Refeição]
-    - Almoço: [Refeição]
-    - Lanche: [Refeição]
-    - Jantar: [Refeição]
-    
-    NOTA FINAL PARA QUEM COZINHA ({q.get('quem_cozinha')}):
-    Dá um conselho técnico sobre como preparar as refeições para este perfil específico.
+    És um nutricionista clínico. Elabora um plano formal para o paciente {username}.
+    Dados: Peso {q.get('peso')}kg, Altura {q.get('altura')}cm, Objetivo: {q.get('objetivo')}.
+    Restrições: {q.get('alergias')}.
+    Divide por: Pequeno-almoço, Lanche da Manhã, Almoço, Lanche da Tarde e Jantar.
+    Não uses markdown (asteriscos ou cardinais). Sê técnico e motivador.
     """
 
     try:
@@ -114,4 +92,13 @@ def criar_pdf_real(username: str, user_data: dict):
     texto_seguro = texto_plano.encode('latin-1', 'replace').decode('latin-1')
     pdf.multi_cell(0, 8, texto_seguro)
     
-    return pdf.output(dest='S').encode('latin-1'), None
+    # --- Fix: ensure we return bytes no matter what pdf.output() returns ---
+    raw = pdf.output(dest='S')
+    if isinstance(raw, bytearray):
+        pdf_bytes = bytes(raw)
+    elif isinstance(raw, str):
+        pdf_bytes = raw.encode('latin-1')
+    else:
+        pdf_bytes = raw  # already bytes
+    
+    return pdf_bytes, None
