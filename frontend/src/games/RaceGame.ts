@@ -11,6 +11,16 @@ export class RaceGame extends GameBase {
   private keyPressCount: number = 0;
   private readonly PIXELS_PER_PRESS = 15; // Pixels que a cobra avança por cada tecla pressionada
   private timeRemaining: number;
+  private lastKeyPressed: 'left' | 'right' | null = null; // Rastrear última tecla pressionada
+  
+  // Corpo da cobra baseado nas calorias
+  private numSegments: number;
+  private readonly SEGMENT_DISTANCE = 30; // Distância entre segmentos
+  private readonly SEGMENT_SIZE = 25; // Tamanho de cada segmento
+  
+  // Cores
+  private readonly SNAKE_HEAD_COLOR = '#FF8C00'; // Laranja escuro
+  private readonly SNAKE_BODY_COLOR = '#FFA500'; // Laranja claro
 
   constructor(canvas: HTMLCanvasElement, config: GameConfig) {
     super(canvas, config);
@@ -20,13 +30,16 @@ export class RaceGame extends GameBase {
       position: 50
     };
     this.timeRemaining = 8; // Reduzido de 30 para 8 segundos
+    
+    // Calcular número de segmentos baseado nas calorias
+    this.numSegments = Math.max(1, Math.floor((config.calories || 300) / 100));
   }
 
   protected async loadAssets(): Promise<void> {
     try {
-      this.assets.background = await this.loadImage('/src/assets/games/background_equilibrio.png');
-      this.assets.ground = await this.loadImage('/src/assets/games/chao_equilibrio.png');
+      this.assets.background = await this.loadImage('/src/assets/games/background_racegame.png');
       this.assets.runner = await this.loadImage('/src/assets/games/cabeca_snake.png');
+      this.assets.finishLine = await this.loadImage('/src/assets/games/finish_line_racegame.png');
     } catch (error) {
       console.warn('Erro ao carregar assets da corrida:', error);
     }
@@ -35,9 +48,21 @@ export class RaceGame extends GameBase {
   protected handleKeyDown(e: KeyboardEvent): void {
     super.handleKeyDown(e);
     
-    // Aceitar qualquer seta para mover
-    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
-      this.runner.position += this.PIXELS_PER_PRESS;
+    // Sistema de teclas alternadas: esquerda -> direita -> esquerda -> direita...
+    if (e.key === 'ArrowLeft') {
+      // Só aceita se a última tecla foi direita OU se é a primeira tecla
+      if (this.lastKeyPressed === 'right' || this.lastKeyPressed === null) {
+        this.runner.position += this.PIXELS_PER_PRESS;
+        this.lastKeyPressed = 'left';
+        this.keyPressCount++;
+      }
+    } else if (e.key === 'ArrowRight') {
+      // Só aceita se a última tecla foi esquerda OU se é a primeira tecla
+      if (this.lastKeyPressed === 'left' || this.lastKeyPressed === null) {
+        this.runner.position += this.PIXELS_PER_PRESS;
+        this.lastKeyPressed = 'right';
+        this.keyPressCount++;
+      }
     }
   }
 
@@ -47,48 +72,102 @@ export class RaceGame extends GameBase {
   }
 
   protected render(): void {
-    // Desenhar fundo simples sem imagem
-    this.ctx.fillStyle = '#FFFFFF'; // Fundo branco
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-    // Desenhar chão/pista simples
-    const groundY = this.canvas.height - 100;
-    this.ctx.fillStyle = '#D3D3D3'; // Cinza claro para a pista
-    this.ctx.fillRect(0, groundY, this.canvas.width, 100);
+    // Desenhar fundo da corrida
+    if (this.assets.background) {
+      this.ctx.drawImage(this.assets.background, 0, 0, this.canvas.width, this.canvas.height);
+    } else {
+      // Fallback: fundo azul claro
+      this.ctx.fillStyle = '#ADD8E6';
+      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    }
 
     // Desenhar linha de chegada
-    this.ctx.strokeStyle = '#FF0000';
-    this.ctx.lineWidth = 4;
-    this.ctx.setLineDash([10, 5]);
-    this.ctx.beginPath();
-    this.ctx.moveTo(this.goalPosition, groundY);
-    this.ctx.lineTo(this.goalPosition, this.canvas.height);
-    this.ctx.stroke();
-    this.ctx.setLineDash([]);
+    if (this.assets.finishLine) {
 
-    // Desenhar corredor CENTRADO NO Y
-    const runnerY = this.canvas.height / 2; // Centralizado verticalmente
-    const runnerSize = 30;
-    if (this.assets.runner) {
+      const finishLineWidth = 320;
+      const finishLineHeight = 100;
+      
+      this.ctx.save();
+      this.ctx.translate(this.goalPosition, this.canvas.height / 2 - 5);
+      this.ctx.rotate(Math.PI / 2);
       this.ctx.drawImage(
-        this.assets.runner, 
-        this.runner.position - runnerSize / 2, 
-        runnerY - runnerSize / 2, 
-        runnerSize, 
-        runnerSize
+        this.assets.finishLine,
+        -finishLineWidth / 2,
+        -finishLineHeight / 2,
+        finishLineWidth,
+        finishLineHeight
       );
+      this.ctx.restore();
     } else {
-      this.drawRect(
-        this.runner.position - 10, 
-        runnerY - 20, 
-        20, 
-        40, 
-        '#FFD700'
+      // Fallback: linha tracejada vermelha centrada
+      this.ctx.strokeStyle = '#FF0000';
+      this.ctx.lineWidth = 4;
+      this.ctx.setLineDash([10, 5]);
+      this.ctx.beginPath();
+      this.ctx.moveTo(this.goalPosition, this.canvas.height / 2 - 60);
+      this.ctx.lineTo(this.goalPosition, this.canvas.height / 2 + 60);
+      this.ctx.stroke();
+      this.ctx.setLineDash([]);
+    }
+
+    // Desenhar cobra CENTRADA NO Y com corpo de segmentos
+    const runnerY = this.canvas.height / 2; // Centralizado verticalmente
+    
+    // Desenhar segmentos do corpo (atrás da cabeça)
+    for (let i = 0; i < this.numSegments; i++) {
+      const segmentX = this.runner.position - (i + 1) * this.SEGMENT_DISTANCE;
+      
+      // Desenhar segmento do corpo (laranja)
+      this.ctx.fillStyle = this.SNAKE_BODY_COLOR;
+      this.ctx.beginPath();
+      this.ctx.roundRect(
+        segmentX - this.SEGMENT_SIZE / 2,
+        runnerY - this.SEGMENT_SIZE / 2,
+        this.SEGMENT_SIZE,
+        this.SEGMENT_SIZE,
+        5
       );
-      // Adicionar "olhos"
-      this.ctx.fillStyle = '#000000';
-      this.ctx.fillRect(this.runner.position - 6, runnerY - 15, 3, 3);
-      this.ctx.fillRect(this.runner.position + 3, runnerY - 15, 3, 3);
+      this.ctx.fill();
+      
+      // Adicionar destaque no corpo
+      this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      this.ctx.beginPath();
+      this.ctx.roundRect(
+        segmentX - this.SEGMENT_SIZE / 2 + 3,
+        runnerY - this.SEGMENT_SIZE / 2 + 3,
+        this.SEGMENT_SIZE - 6,
+        this.SEGMENT_SIZE - 6,
+        3
+      );
+      this.ctx.fill();
+    }
+    
+    // Desenhar cabeça (na frente) ROTACIONADA 90º
+    const headSize = 30;
+    if (this.assets.runner) {
+      this.ctx.save();
+      this.ctx.translate(this.runner.position, runnerY);
+      this.ctx.rotate(Math.PI / 2); // Rodar 90 graus (virada para a esquerda)
+      this.ctx.drawImage(
+        this.assets.runner,
+        -headSize / 2,
+        -headSize / 2,
+        headSize,
+        headSize
+      );
+      this.ctx.restore();
+    } else {
+      // Fallback: cabeça laranja quadrada
+      this.ctx.fillStyle = this.SNAKE_HEAD_COLOR;
+      this.ctx.beginPath();
+      this.ctx.roundRect(
+        this.runner.position - headSize / 2,
+        runnerY - headSize / 2,
+        headSize,
+        headSize,
+        6
+      );
+      this.ctx.fill();
     }
 
     // Desenhar UI

@@ -129,11 +129,11 @@ export class BalanceGame extends GameBase {
       if (i === 0) {
         // Desenhar cabeça
         if (this.assets.snakeHead) {
-          // Redimensionar e rotacionar a cabeça
-          const scaledSize = Math.floor(this.CELL_SIZE * 0.8);
+          // Redimensionar e rotacionar a cabeça (AUMENTADA e GIRADA 180º)
+          const scaledSize = Math.floor(this.CELL_SIZE * 1.5); // Aumentado de 1.2 para 1.5
           this.ctx.save();
           this.ctx.translate(x, y);
-          this.ctx.rotate(-this.angle - Math.PI / 2); // -90 graus extra
+          this.ctx.rotate(-this.angle + Math.PI / 2); // Girado 180º: de -Math.PI/2 para +Math.PI/2
           this.ctx.drawImage(
             this.assets.snakeHead,
             -scaledSize / 2,
