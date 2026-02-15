@@ -6,37 +6,49 @@ from dotenv import load_dotenv
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-class NutriumPDF(FPDF):
+class NutriumFormalPDF(FPDF):
     def header(self):
-        # Retângulo decorativo no topo (Verde Nutrium)
-        self.set_fill_color(39, 174, 96) 
-        self.rect(0, 0, 210, 40, 'F')
+        # --- CONFIGURAÇÃO DO LOGO ---
+        # Caminho para o teu ficheiro Snake-e.png
+        logo_path = os.path.join(os.path.dirname(__file__), '..', 'static', 'Snake-e.png')
         
-        # Título Branco sobre o Verde
-        self.set_font('Arial', 'B', 24)
-        self.set_text_color(255, 255, 255)
-        self.cell(0, 20, 'NUTRIUM AI', 0, 1, 'C')
+        if os.path.exists(logo_path):
+            # image(caminho, x, y, largura) - o 30 é a largura em mm
+            self.image(logo_path, 10, 8, 60) 
         
-        self.set_font('Arial', 'I', 10)
-        self.cell(0, -5, 'O teu plano alimentar inteligente', 0, 1, 'C')
-        self.ln(25) # Espaço para sair de cima da barra verde
+        # --- TÍTULO DO DOCUMENTO (ALINHADO À DIREITA) ---
+        self.set_font('Arial', 'B', 15)
+        self.set_text_color(39, 174, 96) # Verde Nutrium Formal
+        self.cell(0, 10, 'PRESCRIÇÃO ALIMENTAR INTELIGENTE', 0, 1, 'R')
+        
+        self.set_font('Arial', 'I', 9)
+        self.set_text_color(100, 100, 100)
+        self.cell(0, 5, 'Análise de Bioestatística via Nutrium AI', 0, 1, 'R')
+        
+        # Linha verde horizontal de separação
+        self.set_draw_color(39, 174, 96)
+        self.set_line_width(0.5)
+        self.line(10, 35, 200, 35)
+        self.ln(20)
 
     def footer(self):
         self.set_y(-15)
         self.set_font('Arial', 'I', 8)
-        self.set_text_color(150, 150, 150)
-        self.cell(0, 10, f'Nutrium Hackathon 2026 - Pagina {self.page_no()}', 0, 0, 'C')
+        self.set_text_color(120, 120, 120)
+        # Rodapé formal
+        self.cell(0, 10, 'Este documento é gerado automaticamente e serve como guia nutricional.', 0, 0, 'L')
+        self.cell(0, 10, f'Pág. {self.page_no()}', 0, 0, 'R')
 
 def criar_pdf_real(username: str, user_data: dict):
     q = user_data.get("questionnaire", {})
     
-    # --- LOGICA DA IA (IGUAL AO TEU ROBO) ---
+    # Prompt otimizado para a tua IA privada (OpenAI)
     prompt = f"""
-    Cria um plano alimentar de 1 dia para {username}:
-    Peso: {q.get('peso')}kg, Altura: {q.get('altura')}cm, Objetivo: {q.get('objetivo')}.
-    Restricoes: {q.get('alergias')}.
-    Estrutura: Pequeno-almoco, Almoço, Lanche e Jantar. 
-    Usa linguagem profissional. Sem markdown.
+    És um nutricionista clínico. Elabora um plano formal para o paciente {username}.
+    Dados: Peso {q.get('peso')}kg, Altura {q.get('altura')}cm, Objetivo: {q.get('objetivo')}.
+    Restrições: {q.get('alergias')}.
+    Divide por: Pequeno-almoço, Lanche da Manhã, Almoço, Lanche da Tarde e Jantar.
+    Não uses markdown (asteriscos ou cardinais). Sê técnico e motivador.
     """
 
     try:
@@ -45,51 +57,39 @@ def criar_pdf_real(username: str, user_data: dict):
             messages=[{"role": "user", "content": prompt}]
         )
         texto_plano = response.choices[0].message.content
-    except:
-        texto_plano = "Erro ao carregar plano. Contacte o SOS Nutrium."
+    except Exception as e:
+        print(f"Erro OpenAI: {e}")
+        texto_plano = "Erro na comunicação com a IA Engine. Por favor contacte o suporte."
 
-    # --- MONTAGEM DO PDF ESTILIZADO ---
-    pdf = NutriumPDF()
+    pdf = NutriumFormalPDF()
     pdf.add_page()
     
-    # 1. Info do Utilizador (Caixa Cinza)
-    pdf.set_fill_color(245, 245, 245)
-    pdf.rect(10, 45, 190, 25, 'F')
+    # --- BOX DE IDENTIFICAÇÃO DO PACIENTE ---
+    pdf.set_fill_color(240, 245, 240) # Verde muito claro
+    pdf.rect(10, 42, 190, 25, 'F')
     
-    pdf.set_y(48)
-    pdf.set_x(15)
-    pdf.set_font("Arial", 'B', 12)
+    pdf.set_y(45)
+    pdf.set_font("Arial", 'B', 11)
     pdf.set_text_color(40, 40, 40)
-    pdf.cell(0, 10, f"Plano para: {username.upper()}", ln=True)
-    
     pdf.set_x(15)
+    pdf.cell(0, 7, f"PACIENTE: {username.upper()}", ln=True)
+    
     pdf.set_font("Arial", '', 10)
-    pdf.cell(0, 5, f"Objetivo: {q.get('objetivo')} | Peso: {q.get('peso')}kg | Alergias: {q.get('alergias')}", ln=True)
+    pdf.set_x(15)
+    pdf.cell(0, 6, f"DADOS: {q.get('peso')}kg | {q.get('altura')}cm | Objetivo: {q.get('objetivo')}", ln=True)
     
     pdf.ln(15)
 
-    # 2. Titulo do Plano (Verde)
-    pdf.set_font("Arial", 'B', 14)
+    # --- TEXTO DO PLANO ---
+    pdf.set_font("Arial", 'B', 12)
     pdf.set_text_color(39, 174, 96)
-    pdf.cell(0, 10, "SUGESTOES DIARIAS", ln=True)
+    pdf.cell(0, 10, "DETALHE DO PLANO DIETÉTICO", ln=True)
     
-    # Linha horizontal verde
-    pdf.set_draw_color(39, 174, 96)
-    pdf.line(10, pdf.get_y(), 200, pdf.get_y())
-    pdf.ln(5)
-
-    # 3. Conteúdo da IA
     pdf.set_font("Arial", '', 11)
     pdf.set_text_color(60, 60, 60)
     
-    # Tratamento de texto para evitar erros de encoding
+    # Limpeza de caracteres especiais para evitar erros no FPDF
     texto_seguro = texto_plano.encode('latin-1', 'replace').decode('latin-1')
     pdf.multi_cell(0, 8, texto_seguro)
     
-    # 4. Mensagem Final
-    pdf.ln(10)
-    pdf.set_font("Arial", 'B', 10)
-    pdf.set_text_color(39, 174, 96)
-    pdf.cell(0, 10, "Bons treinos! Come bem, vive melhor.", 0, 0, 'C')
-
     return pdf.output(dest='S').encode('latin-1'), None
