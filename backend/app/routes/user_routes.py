@@ -77,7 +77,7 @@ def login(user: UserLogin):
             }
     raise HTTPException(status_code=401, detail="Dados incorretos")
 
-# NOVA ROTA: Obter perfil (Útil para o Amigo Presente/IA saber com quem fala)
+# Obter perfil (Útil para a IA saber com quem fala)
 @router.get("/profile/{username}")
 def get_profile(username: str):
     db = load_db()

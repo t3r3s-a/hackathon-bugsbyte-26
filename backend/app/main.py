@@ -11,13 +11,12 @@ app.include_router(plano.router, prefix="/plano", tags=["Plano"])
 game_build_path = os.path.join(os.path.dirname(__file__), "Jogo", "build", "web")
 if os.path.exists(game_build_path):
     app.mount("/play-game", StaticFiles(directory=game_build_path, html=True), name="snake")
-    print("✅ Jogo montado em http://127.0.0.1:8000/play-game")
+    print("Jogo montado em http://127.0.0.1:8000/play-game")
 
 # --- CONFIGURAÇÃO DE CAMINHOS ---
 BASE_DIR = os.path.dirname(__file__)
 
 # 1. Pasta das Imagens (Assets)
-# Verifica se o nome é 'assets' ou 'assents' no teu computador!
 assets_path = os.path.join(BASE_DIR, "Jogo", "assets") 
 
 # 2. Pasta do Jogo Compilado (Gerada pelo Pygbag)

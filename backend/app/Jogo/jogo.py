@@ -16,7 +16,7 @@ class SnakeGame:
         pygame.display.set_caption('Nutrium Snack-e')
         self.clock = pygame.time.Clock()
         
-        # Fontes corrigidas e alinhadas
+       
         self.font_score = pygame.font.SysFont("Arial", 26, bold=True)
         self.font_alimento = pygame.font.SysFont("Arial", 40)
         self.font_fase = pygame.font.SysFont("Arial", 18)
@@ -104,7 +104,7 @@ class SnakeGame:
                 nome_escolhido = random.choice(nomes_fase)
                 self.alimento_atual = ALIMENTOS_DICT[nome_escolhido]
     
-                # --- Carregar a imagem ---
+                #Carregar a imagem
                 nome_img = self.alimento_atual["nome"] + ".png"
                 self.caminho_imagem_alimento = os.path.join(
                     self.caminho_base, "assets", nome_img
@@ -119,7 +119,7 @@ class SnakeGame:
                 except Exception as e:
                     print(f"Erro ao carregar imagem {self.caminho_imagem_alimento}: {e}")
                     self.imagem_alimento_cache = None
-                # ---------------------------------
+            
                 return
             tentativas += 1
         self.game_over()

@@ -5,7 +5,6 @@ from app.services.ai_engine import gerar_plano_completo, responder_chat_nutrium
 # Criamos o Router com o prefixo /nutrium
 router = APIRouter(prefix="/nutrium", tags=["Nutrium Core"])
 
-# Memória temporária para o Hackathon (guarda o plano gerado nesta sessão)
 PLANO_ATUAL = ""
 
 @router.post("/gerar-plano")

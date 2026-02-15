@@ -174,7 +174,7 @@ const features = [
 
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* Força 3 colunas */
+  grid-template-columns: repeat(3, 1fr); 
   gap: 30px;
   max-width: 1100px;
   margin: 0 auto;

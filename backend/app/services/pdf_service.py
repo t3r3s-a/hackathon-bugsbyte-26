@@ -14,7 +14,7 @@ class NutriumFormalPDF(FPDF):
         
         if os.path.exists(logo_path):
             # image(caminho, x, y, largura) - o 30 é a largura em mm
-            self.image(logo_path, 10, 8, 60) 
+            self.image(logo_path, 10, 10, 85) 
         
         # --- TÍTULO DO DOCUMENTO (ALINHADO À DIREITA) ---
         self.set_font('Arial', 'B', 15)
@@ -40,65 +40,107 @@ class NutriumFormalPDF(FPDF):
         self.cell(0, 10, f'Pág. {self.page_no()}', 0, 0, 'R')
 
 def criar_pdf_real(username: str, user_data: dict):
+    # Extração detalhada dos dados do JSON
     q = user_data.get("questionnaire", {})
     
-    # Prompt otimizado para a tua IA privada (OpenAI)
+    nome = username.upper()
+    idade = q.get('idade', 'N/A')
+    peso = q.get('peso', 'N/A')
+    altura = q.get('altura', 'N/A')
+    objetivo = q.get('objetivo', 'Equilíbrio Alimentar')
+    alergias = q.get('alergias', 'Nenhuma declarada')
+    preferencias = q.get('preferencias', 'Não especificadas')
+    nivel_atividade = q.get('atividade', 'Moderada')
+
+    # --- PROMPT DE ENGENHARIA NUTRICIONAL ---
     prompt = f"""
-    És um nutricionista clínico. Elabora um plano formal para o paciente {username}.
-    Dados: Peso {q.get('peso')}kg, Altura {q.get('altura')}cm, Objetivo: {q.get('objetivo')}.
-    Restrições: {q.get('alergias')}.
-    Divide por: Pequeno-almoço, Lanche da Manhã, Almoço, Lanche da Tarde e Jantar.
-    Não uses markdown (asteriscos ou cardinais). Sê técnico e motivador.
+    És um Nutricionista Clínico de alta performance. Elabora um Plano Alimentar Personalizado e Formal para o paciente {nome}.
+    
+    PERFIL DO PACIENTE:
+    - Idade: {idade} anos | Peso: {peso}kg | Altura: {altura}cm
+    - Nível de Atividade Física: {nivel_atividade}
+    - Objetivo Principal: {objetivo}
+    - Restrições Médicas/Alergias: {alergias}
+    - Preferências Alimentares: {preferencias}
+
+    ESTRUTURA DO PLANO (OBRIGATÓRIA):
+    1. ANÁLISE INICIAL: Um parágrafo curto sobre como o plano foi adaptado ao objetivo ({objetivo}).
+    2. DISTRIBUIÇÃO DE REFEIÇÕES:
+       - Pequeno-almoço: Sugestão técnica com porções.
+       - Lanche da Manhã: Opção prática.
+       - Almoço: Foco em macronutrientes (Proteína, Hidratos, Vegetais).
+       - Lanche da Tarde: Foco em saciedade.
+       - Jantar: Refeição leve e reparadora.
+    3. RECOMENDAÇÃO DE HIDRATAÇÃO: Cálculo sugerido de água.
+    4. NOTA MOTIVACIONAL: Uma frase curta e profissional.
+
+    REGRAS CRÍTICAS:
+    - NÃO uses Markdown (sem asteriscos **, sem cardinais #).
+    - Usa linguagem técnica mas acessível (ex: 'Macronutrientes', 'Índice Glicémico').
+    - Sê específico nas quantidades (gramas ou colheres).
+    - Formata como um documento oficial.
     """
 
     try:
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}]
+            messages=[
+                {"role": "system", "content": "És um nutricionista que escreve relatórios médicos formais em português de Portugal."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7 # Criatividade moderada para manter o rigor técnico
         )
         texto_plano = response.choices[0].message.content
     except Exception as e:
         print(f"Erro OpenAI: {e}")
-        texto_plano = "Erro na comunicação com a IA Engine. Por favor contacte o suporte."
+        texto_plano = "Ocorreu um erro técnico na geração do plano. Por favor, tente novamente."
 
+    # --- GERAÇÃO DO PDF ---
     pdf = NutriumFormalPDF()
     pdf.add_page()
     
-    # --- BOX DE IDENTIFICAÇÃO DO PACIENTE ---
-    pdf.set_fill_color(240, 245, 240) # Verde muito claro
-    pdf.rect(10, 42, 190, 25, 'F')
-    
+    # Cabeçalho do Paciente
+    pdf.set_fill_color(240, 245, 240)
+    pdf.rect(10, 42, 190, 30, 'F')
     pdf.set_y(45)
     pdf.set_font("Arial", 'B', 11)
-    pdf.set_text_color(40, 40, 40)
     pdf.set_x(15)
-    pdf.cell(0, 7, f"PACIENTE: {username.upper()}", ln=True)
-    
+    pdf.cell(0, 7, f"PACIENTE: {nome}", ln=True)
     pdf.set_font("Arial", '', 10)
     pdf.set_x(15)
-    pdf.cell(0, 6, f"DADOS: {q.get('peso')}kg | {q.get('altura')}cm | Objetivo: {q.get('objetivo')}", ln=True)
+    pdf.cell(0, 6, f"DADOS: {peso}kg | {altura}cm | Objetivo: {objetivo}", ln=True)
+    pdf.set_x(15)
+    pdf.cell(0, 6, f"ALERGIAS: {alergias}", ln=True)
     
-    pdf.ln(15)
+    pdf.ln(12)
 
-    # --- TEXTO DO PLANO ---
+    # Conteúdo da IA
     pdf.set_font("Arial", 'B', 12)
     pdf.set_text_color(39, 174, 96)
-    pdf.cell(0, 10, "DETALHE DO PLANO DIETÉTICO", ln=True)
+    pdf.cell(0, 10, "DIRETRIZES NUTRICIONAIS PERSONALIZADAS", ln=True)
+
+    texto_limpo = texto_plano.replace('*', '').replace('#', '').replace('_', '')
     
     pdf.set_font("Arial", '', 11)
-    pdf.set_text_color(60, 60, 60)
+    pdf.set_text_color(50, 50, 50)
+
+
+    texto_plano = response.choices[0].message.content
+
+  
+    # Remove asteriscos, cardinais e outros símbolos de formatação
+    texto_limpo = texto_plano.replace('*', '').replace('#', '').replace('_', '')
+
+    # --- GERAÇÃO DO PDF ---
+    pdf = NutriumFormalPDF()
+    pdf.add_page()
     
-    # Limpeza de caracteres especiais para evitar erros no FPDF
-    texto_seguro = texto_plano.encode('latin-1', 'replace').decode('latin-1')
-    pdf.multi_cell(0, 8, texto_seguro)
+
+
+    # Limpeza final para o FPDF (Encoding)
+    # Usamos o texto_limpo em vez do texto_plano
+    texto_seguro = texto_limpo.encode('latin-1', 'replace').decode('latin-1')
+    pdf.multi_cell(0, 7, texto_seguro)
     
-    # --- Fix: ensure we return bytes no matter what pdf.output() returns ---
-    raw = pdf.output(dest='S')
-    if isinstance(raw, bytearray):
-        pdf_bytes = bytes(raw)
-    elif isinstance(raw, str):
-        pdf_bytes = raw.encode('latin-1')
-    else:
-        pdf_bytes = raw  # already bytes
-    
-    return pdf_bytes, None
+    return pdf.output(dest='S').encode('latin-1'), None
+

@@ -46,7 +46,7 @@ const baixarPlano = async () => {
 };
 
 const irParaJogo = () => router.push('/games');
-const irParaChat = () => router.push('/chat'); // Confirma se tens esta rota
+const irParaChat = () => router.push('/chat');
 </script>
 
 <template>
@@ -94,7 +94,7 @@ const irParaChat = () => router.push('/chat'); // Confirma se tens esta rota
     </div> </div> </template>
     
 <style scoped>
-/* Mantive o teu estilo base e melhorei as transições */
+
 .view-wrapper {
   display: flex; align-items: center; justify-content: center;
   min-height: 100vh; background: #f8fafc; padding: 30px;
@@ -194,7 +194,7 @@ const irParaChat = () => router.push('/chat'); // Confirma se tens esta rota
   display: flex;           /* Mantém para alinhar os foguetes lá dentro */
   margin: 0 auto 30px;     /* O 'auto' nas laterais centra o botão no ecrã */
   
-  /* Resto do teu código que já tinhas: */
+ 
   width: 80%;
   max-width: 550px;
   padding: 40px;
@@ -233,7 +233,7 @@ const irParaChat = () => router.push('/chat'); // Confirma se tens esta rota
 .titulo-plano {
   font-size: 2.2rem;
   font-weight: 900;
-  text-transform: none; /* Mantém como escreveste */
+  text-transform: none; 
   letter-spacing: -1px;
 }
 
@@ -246,7 +246,7 @@ const irParaChat = () => router.push('/chat'); // Confirma se tens esta rota
 
 .foguete-emoji {
   font-size: 45px;
-  /* Animação para o foguete abanar um bocadinho */
+  /* Animação para o foguete */
   animation: balanco 2s infinite ease-in-out;
 }
 

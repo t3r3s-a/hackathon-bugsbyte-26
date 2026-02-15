@@ -6,7 +6,7 @@ import axios from "axios";
 const router = useRouter();
 const username = localStorage.getItem("usuario_logado") || "Explorador";
 
-// --- ESTADOS ---
+// ESTADOS
 const question = ref("");
 const chatContainer = ref(null);
 const loading = ref(false);

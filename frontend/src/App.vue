@@ -12,7 +12,7 @@
 </template>
 
 <script setup>
-// Nada especial aqui
+
 </script>
 
 <style scoped>

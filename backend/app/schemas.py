@@ -3,8 +3,6 @@ from pydantic import BaseModel, Field, field_validator
 from typing import List, Optional
 from app.data.alergias import alergia as LISTA_ALERGIAS_OFICIAL
 
-# --- 1. TEUS SCHEMAS (Autenticação que tu criaste) ---
-# O teu colega não tem isto, por isso tens de manter!
 
 class UserCreate(BaseModel):
     username: str = Field(..., min_length=3)
@@ -22,8 +20,6 @@ class UserCreate(BaseModel):
 class UserLogin(BaseModel):
     username: str
     password: str
-
-# --- 2. SCHEMAS DO TEU COLEGA (Copiados exatamente do .py dele) ---
 
 class DadosUsuario(BaseModel):
     username: str  # Precisamos disto para saber em qual user guardar

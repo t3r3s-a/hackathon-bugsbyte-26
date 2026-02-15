@@ -38,7 +38,7 @@ ALIMENTOS_DICT = {alimento["nome"]: alimento for alimento in alimentos}
 # FUNDOS COM DURAÇÕES, DIMENSÕES E LISTAS DE ALIMENTOS
 # ========================================
 
-# PROBLEMA: Quando a cobra é muito grande ao mudar de fase clipa fora da grid e dá game_over
+
 
 FUNDOS = {
     'fase1': {

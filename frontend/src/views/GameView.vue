@@ -66,10 +66,7 @@ const username = localStorage.getItem("usuario_logado") || "Explorador";
 const userCalories = ref(1000);
 const selectedGame = ref(null);
 
-// Calculate initial calories based on user data (you can enhance this)
 onMounted(() => {
-  // You could fetch user data from your backend and calculate calories
-  // For now, we'll use a default value
   const savedCalories = localStorage.getItem("user_calories");
   if (savedCalories) {
     userCalories.value = parseInt(savedCalories);

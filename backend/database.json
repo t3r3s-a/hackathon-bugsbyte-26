@@ -62,12 +62,6 @@
             "questionnaire": null
         },
         {
-            "username": "nigga",
-            "email": "nigga@as",
-            "password": "nigga",
-            "questionnaire": null
-        },
-        {
             "username": "jorge",
             "email": "jorge@",
             "password": "jorge",
@@ -268,6 +262,27 @@
                     "pistachio"
                 ],
                 "quem_cozinha": "avos",
+                "quem_cozinha_outro": "",
+                "come_na_cantina": "nao"
+            }
+        },
+        {
+            "username": "Roberto",
+            "email": "roberto@gmail.com",
+            "password": "123456",
+            "questionnaire": {
+                "username": "Roberto",
+                "idade": 13,
+                "peso": 40.0,
+                "altura": 161.0,
+                "sexo": "Masculino",
+                "faz_desporto": "sim",
+                "frequencia_desporto": 3,
+                "brinca_na_rua": "nao",
+                "alergias": [
+                    "leite e derivados"
+                ],
+                "quem_cozinha": "pai",
                 "quem_cozinha_outro": "",
                 "come_na_cantina": "nao"
             }
