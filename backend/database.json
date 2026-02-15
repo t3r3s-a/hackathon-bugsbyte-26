@@ -120,6 +120,109 @@
             "email": "teresa3@gmail.com",
             "password": "teresa3",
             "questionnaire": null
+        },
+        {
+            "username": "carlos",
+            "email": "carlos@gmail.com",
+            "password": "carlos",
+            "questionnaire": {
+                "username": "carlos",
+                "idade": 14,
+                "peso": 70.0,
+                "altura": 172.0,
+                "sexo": "Masculino",
+                "faz_desporto": "sim",
+                "frequencia_desporto": 2,
+                "brinca_na_rua": "nao",
+                "alergias": [],
+                "quem_cozinha": "outros",
+                "quem_cozinha_outro": "tio",
+                "come_na_cantina": "nao"
+            }
+        },
+        {
+            "username": "to",
+            "email": "to@gmail.com",
+            "password": "to",
+            "questionnaire": {
+                "username": "to",
+                "idade": 14,
+                "peso": 65.0,
+                "altura": 172.0,
+                "sexo": "Masculino",
+                "faz_desporto": "nao",
+                "frequencia_desporto": 0,
+                "brinca_na_rua": "nao",
+                "alergias": [
+                    "trigo e outros cereais com gl\u00faten"
+                ],
+                "quem_cozinha": "mae",
+                "quem_cozinha_outro": "",
+                "come_na_cantina": "nao"
+            }
+        },
+        {
+            "username": "lo",
+            "email": "lo@gmail.com",
+            "password": "lo",
+            "questionnaire": {
+                "username": "lo",
+                "idade": 14,
+                "peso": 30.0,
+                "altura": 172.0,
+                "sexo": "Masculino",
+                "faz_desporto": "sim",
+                "frequencia_desporto": 5,
+                "brinca_na_rua": "nao",
+                "alergias": [
+                    "castanha"
+                ],
+                "quem_cozinha": "pai",
+                "quem_cozinha_outro": "",
+                "come_na_cantina": "nao"
+            }
+        },
+        {
+            "username": "do",
+            "email": "do@da",
+            "password": "do",
+            "questionnaire": {
+                "username": "do",
+                "idade": 14,
+                "peso": 30.0,
+                "altura": 172.0,
+                "sexo": "Masculino",
+                "faz_desporto": "nao",
+                "frequencia_desporto": 0,
+                "brinca_na_rua": "nao",
+                "alergias": [
+                    "castanha"
+                ],
+                "quem_cozinha": "mae",
+                "quem_cozinha_outro": "",
+                "come_na_cantina": "nao"
+            }
+        },
+        {
+            "username": "jo",
+            "email": "jo@jo",
+            "password": "jo",
+            "questionnaire": {
+                "username": "jo",
+                "idade": 14,
+                "peso": 30.0,
+                "altura": 172.0,
+                "sexo": "Masculino",
+                "faz_desporto": "nao",
+                "frequencia_desporto": 0,
+                "brinca_na_rua": "nao",
+                "alergias": [
+                    "castanha"
+                ],
+                "quem_cozinha": "mae",
+                "quem_cozinha_outro": "",
+                "come_na_cantina": "nao"
+            }
         }
     ]
 }
