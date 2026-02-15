@@ -141,6 +141,10 @@ export class SnakeGame {
     this.gameState.calories = calories;
   }
   
+  public setCurrentMeal(mealIndex: number) {
+    this.gameState.currentMeal = mealIndex;
+  }
+  
   private setupControls() {
     // Remover listener antigo se existir
     if (this.keydownHandler) {

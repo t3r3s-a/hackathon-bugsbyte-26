@@ -310,6 +310,9 @@ const initializeSnakeGame = () => {
   // IMPORTANTE: Definir calorias iniciais do gameState (persistentes)
   snakeGame.setInitialCalories(gameState.value.calories)
   
+  // IMPORTANTE: Definir qual refeição atual está sendo jogada
+  snakeGame.setCurrentMeal(gameState.value.currentMeal)
+  
   snakeGame.setCallbacks(
     (result: MealResult) => handleMealEnd(result),
     (food: Food) => handleFoodDiscovery(food)
