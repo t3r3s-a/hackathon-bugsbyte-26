@@ -55,7 +55,7 @@ export interface MealResult {
   caloriesConsumed: number;
   newFoodsDiscovered: string[];
   message: string;
-  resetToMenu?: boolean; // Flag para indicar que deve voltar ao menu inicial (Game Over)
+  resetToMenu?: boolean;
 }
 
 export interface TrainingChoice {
@@ -66,7 +66,6 @@ export interface TrainingChoice {
   caloriesBurned: number;
 }
 
-// Helper function to load meals with food data
 export async function loadMealsData(): Promise<MealData> {
   const [foodsData, mealsConfig] = await Promise.all([
     import('../data/foods.json'),
@@ -75,8 +74,7 @@ export async function loadMealsData(): Promise<MealData> {
   
   const foods = foodsData.default;
   const meals = mealsConfig.default;
-  
-  // Create a map for quick food lookup
+
   const foodMap = new Map<string, any>();
   foods.forEach((food: any) => {
     foodMap.set(food.nome, {
@@ -93,8 +91,7 @@ export async function loadMealsData(): Promise<MealData> {
       discovery_message: food.descricao
     });
   });
-  
-  // Transform meals config to meals with full food data
+
   const mealsData: MealData = {};
   
   for (const [key, mealConfig] of Object.entries(meals) as [string, any][]) {
@@ -117,13 +114,12 @@ export async function loadMealsData(): Promise<MealData> {
       food_ids: mealConfig.food_ids,
       foods: mealFoods,
       duration: mealConfig.duration || 30,
-      cols: mealConfig.cols, // Carregar colunas da grid
-      rows: mealConfig.rows  // Carregar linhas da grid
+      cols: mealConfig.cols,
+      rows: mealConfig.rows
     };
   }
   
   return mealsData;
 }
 
-// Adicionar às exportações existentes
 export type { GameConfig, GameResult, GameType } from './types';
