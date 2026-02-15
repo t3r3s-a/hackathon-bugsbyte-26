@@ -3,31 +3,23 @@ import type { GameConfig, GameResult } from './types';
 
 interface RunnerState {
   position: number;
-  speed: number;
-  stamina: number;
-  maxStamina: number;
 }
 
 export class RaceGame extends GameBase {
   private runner: RunnerState;
   private goalPosition: number;
   private keyPressCount: number = 0;
-  private lastKeyTime: number = 0;
-  private readonly MAX_SPEED = 10;
-  private readonly STAMINA_DRAIN_RATE = 20;
-  private readonly STAMINA_RECOVERY_RATE = 30;
-  private readonly SPEED_PER_PRESS = 0.5;
+  private readonly PIXELS_PER_PRESS = 15; // Pixels que a cobra avança por cada tecla pressionada
+  private timeRemaining: number;
 
   constructor(canvas: HTMLCanvasElement, config: GameConfig) {
     super(canvas, config);
     
     this.goalPosition = this.canvas.width - 100;
     this.runner = {
-      position: 50,
-      speed: 0,
-      stamina: 100,
-      maxStamina: 100
+      position: 50
     };
+    this.timeRemaining = 8; // Reduzido de 30 para 8 segundos
   }
 
   protected async loadAssets(): Promise<void> {
@@ -43,84 +35,56 @@ export class RaceGame extends GameBase {
   protected handleKeyDown(e: KeyboardEvent): void {
     super.handleKeyDown(e);
     
-    const currentTime = performance.now();
-    const timeSinceLastPress = currentTime - this.lastKeyTime;
-    
-    // Aceitar qualquer seta para correr
+    // Aceitar qualquer seta para mover
     if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
-      this.keyPressCount++;
-      this.lastKeyTime = currentTime;
-      
-      // Aumentar velocidade se tiver stamina
-      if (this.runner.stamina > 0) {
-        this.runner.speed = Math.min(this.MAX_SPEED, this.runner.speed + this.SPEED_PER_PRESS);
-        
-        // Bonus se pressionar rápido (< 200ms)
-        if (timeSinceLastPress < 200 && timeSinceLastPress > 0) {
-          this.runner.speed = Math.min(this.MAX_SPEED, this.runner.speed + 0.3);
-        }
-      }
+      this.runner.position += this.PIXELS_PER_PRESS;
     }
   }
 
   protected update(deltaTime: number): void {
-    // Drenar stamina quando correndo
-    if (this.runner.speed > 0) {
-      this.runner.stamina -= this.STAMINA_DRAIN_RATE * deltaTime;
-      this.runner.stamina = Math.max(0, this.runner.stamina);
-    } else {
-      // Recuperar stamina quando parado
-      this.runner.stamina += this.STAMINA_RECOVERY_RATE * deltaTime;
-      this.runner.stamina = Math.min(this.runner.maxStamina, this.runner.stamina);
-    }
-
-    // Reduzir velocidade gradualmente (fadiga)
-    this.runner.speed = Math.max(0, this.runner.speed - 2 * deltaTime);
-
-    // Se stamina acabou, velocidade diminui drasticamente
-    if (this.runner.stamina <= 0) {
-      this.runner.speed = Math.max(0, this.runner.speed - 4 * deltaTime);
-    }
-
-    // Mover corredor
-    this.runner.position += this.runner.speed * 60 * deltaTime;
+    // Não há mais física de velocidade ou stamina
+    // A cobra só se move quando pressiona teclas
   }
 
   protected render(): void {
-    // Desenhar fundo
-    if (this.assets.background) {
-      this.ctx.drawImage(this.assets.background, 0, 0, this.canvas.width, this.canvas.height);
-    } else {
-      const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
-      gradient.addColorStop(0, '#87CEEB');
-      gradient.addColorStop(1, '#98FB98');
-      this.ctx.fillStyle = gradient;
-      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-    }
+    // Desenhar fundo simples sem imagem
+    this.ctx.fillStyle = '#FFFFFF'; // Fundo branco
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-    // Desenhar chão/pista
-    if (this.assets.ground) {
-      this.ctx.drawImage(this.assets.ground, 0, this.canvas.height - 100, this.canvas.width, 100);
-    } else {
-      this.drawRect(0, this.canvas.height - 50, this.canvas.width, 50, '#8B4513');
-    }
+    // Desenhar chão/pista simples
+    const groundY = this.canvas.height - 100;
+    this.ctx.fillStyle = '#D3D3D3'; // Cinza claro para a pista
+    this.ctx.fillRect(0, groundY, this.canvas.width, 100);
 
     // Desenhar linha de chegada
     this.ctx.strokeStyle = '#FF0000';
     this.ctx.lineWidth = 4;
     this.ctx.setLineDash([10, 5]);
     this.ctx.beginPath();
-    this.ctx.moveTo(this.goalPosition, this.canvas.height - 100);
-    this.ctx.lineTo(this.goalPosition, this.canvas.height - 50);
+    this.ctx.moveTo(this.goalPosition, groundY);
+    this.ctx.lineTo(this.goalPosition, this.canvas.height);
     this.ctx.stroke();
     this.ctx.setLineDash([]);
 
-    // Desenhar corredor
-    const runnerY = this.canvas.height - 90;
+    // Desenhar corredor CENTRADO NO Y
+    const runnerY = this.canvas.height / 2; // Centralizado verticalmente
+    const runnerSize = 30;
     if (this.assets.runner) {
-      this.ctx.drawImage(this.assets.runner, this.runner.position - 15, runnerY - 15, 30, 30);
+      this.ctx.drawImage(
+        this.assets.runner, 
+        this.runner.position - runnerSize / 2, 
+        runnerY - runnerSize / 2, 
+        runnerSize, 
+        runnerSize
+      );
     } else {
-      this.drawRect(this.runner.position - 10, runnerY - 20, 20, 40, '#FFD700');
+      this.drawRect(
+        this.runner.position - 10, 
+        runnerY - 20, 
+        20, 
+        40, 
+        '#FFD700'
+      );
       // Adicionar "olhos"
       this.ctx.fillStyle = '#000000';
       this.ctx.fillRect(this.runner.position - 6, runnerY - 15, 3, 3);
@@ -133,51 +97,19 @@ export class RaceGame extends GameBase {
 
   private renderUI(): void {
     const padding = 20;
-    const uiY = 20;
 
-    // Barra de stamina
-    const staminaBarWidth = 200;
-    const staminaBarHeight = 20;
-    const staminaX = padding;
-
-    this.ctx.fillStyle = '#FFFFFF';
-    this.ctx.fillRect(staminaX - 2, uiY - 2, staminaBarWidth + 4, staminaBarHeight + 4);
+    // Distância para a meta em metros (10 pixels = 1 metro)
+    const distancePixels = Math.max(0, this.goalPosition - this.runner.position);
+    const distanceMeters = Math.round(distancePixels / 10);
     
-    this.ctx.fillStyle = '#E74C3C';
-    this.ctx.fillRect(staminaX, uiY, staminaBarWidth, staminaBarHeight);
-    
-    const staminaPercent = this.runner.stamina / this.runner.maxStamina;
-    this.ctx.fillStyle = staminaPercent > 0.3 ? '#2ECC71' : '#F39C12';
-    this.ctx.fillRect(staminaX, uiY, staminaBarWidth * staminaPercent, staminaBarHeight);
-
-    this.ctx.fillStyle = '#000000';
-    this.ctx.font = '14px Arial';
-    this.ctx.fillText('Stamina', staminaX, uiY - 5);
-
-    // Velocidade atual
-    const speedY = uiY + 40;
     this.ctx.fillStyle = '#2C3E50';
-    this.ctx.font = '18px Arial';
-    this.ctx.fillText(`Velocidade: ${this.runner.speed.toFixed(1)}`, padding, speedY);
-
-    // Contador de teclas
-    this.ctx.fillText(`Teclas: ${this.keyPressCount}`, padding, speedY + 30);
-
-    // Distância para a meta
-    const distance = Math.max(0, this.goalPosition - this.runner.position);
-    const distanceY = speedY + 60;
-    this.ctx.fillStyle = '#2C3E50';
-    this.ctx.font = '16px Arial';
-    this.ctx.fillText(`Meta: ${Math.round(distance)}m`, padding, distanceY);
+    this.ctx.font = 'bold 24px Arial';
+    this.ctx.fillText(`Distância para a meta: ${distanceMeters}m`, padding, 100);
 
     // Instruções
     this.ctx.fillStyle = '#7F8C8D';
-    this.ctx.font = 'bold 16px Arial';
-    this.ctx.fillText('Prima as setas rapidamente!', padding, this.canvas.height - 30);
-    
-    // Dica extra
-    this.ctx.font = '14px Arial';
-    this.ctx.fillText('Quanto mais rápido pressionares, mais rápido corres!', padding, this.canvas.height - 10);
+    this.ctx.font = 'bold 18px Arial';
+    this.ctx.fillText('Prima as setas para avançar!', padding, this.canvas.height - 20);
   }
 
   protected checkGameEnd(): boolean {

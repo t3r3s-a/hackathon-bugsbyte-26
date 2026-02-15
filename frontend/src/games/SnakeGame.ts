@@ -36,9 +36,14 @@ export class SnakeGame {
   private gridWidth: number = 0;
   private gridHeight: number = 0;
   
-  // Cores da cobra (laranja como no Python)
-  private readonly SNAKE_HEAD_COLOR = '#BE4B00';
-  private readonly SNAKE_BODY_COLOR = '#F97316';
+  // Cores inspiradas no Google Snake (vibrantes e modernas)
+  private readonly BACKGROUND_COLOR = '#1A7F5A'; // Verde vibrante como fundo
+  private readonly GRID_LIGHT = '#229663'; // Verde mais claro para células claras
+  private readonly GRID_DARK = '#1A7F5A'; // Verde escuro para células escuras
+  private readonly SNAKE_HEAD_COLOR = '#FF8C00'; // Laranja escuro
+  private readonly SNAKE_BODY_COLOR = '#FFA500'; // Laranja mais claro
+  private readonly HUD_BACKGROUND = '#F8F9FA'; // Cinza claro
+  private readonly HUD_TEXT = '#202124'; // Preto suave
   
   // Cache de imagens
   private foodImages: Map<string, HTMLImageElement> = new Map();
@@ -240,6 +245,7 @@ export class SnakeGame {
         
         this.currentCalories = Math.max(0, this.currentCalories - (this.CALORIES_PER_SECOND * deltaTime));
         
+        // Verificar calorias antes de atualizar posição
         if (this.currentCalories <= this.MIN_CALORIES || this.currentCalories >= this.MAX_CALORIES) {
           this.stopGame();
           this.resetToDay1();
@@ -258,6 +264,10 @@ export class SnakeGame {
           return;
         }
         
+        // Atualizar posição da cobra
+        this.update();
+        
+        // Verificar colisões DEPOIS de atualizar mas ANTES de desenhar
         if (this.checkCollisions()) {
           this.stopGame();
           this.resetToDay1();
@@ -272,9 +282,7 @@ export class SnakeGame {
           return;
         }
         
-        this.update();
-        this.draw(meal, this.currentCalories, targetMin, targetMax);
-        
+        // Verificar se comeu comida
         const head = this.snake[0];
         if (this.currentFood && 
             Math.abs(head.x - this.currentFood.x) < this.cellSize &&
@@ -313,6 +321,7 @@ export class SnakeGame {
           this.spawnFood(meal);
         }
         
+        // Verificar fim do tempo
         if (this.timeRemaining <= 0.1) {
           this.stopGame();
           this.gameState.calories = this.currentCalories;
@@ -339,7 +348,11 @@ export class SnakeGame {
               message: `Comeste demasiado durante a refeição! 🤢`
             });
           }
+          return;
         }
+        
+        // Desenhar APENAS depois de todas as verificações
+        this.draw(meal, this.currentCalories, targetMin, targetMax);
       }, this.GAME_SPEED);
     });
   }
@@ -386,126 +399,115 @@ export class SnakeGame {
   }
   
   private draw(meal: Meal, calories: number, targetMin: number, targetMax: number) {
-    this.ctx.fillStyle = '#18181B';
+    // Fundo principal com cor vibrante
+    this.ctx.fillStyle = this.BACKGROUND_COLOR;
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     
-    this.ctx.strokeStyle = 'rgba(63, 63, 70, 0.5)';
-    this.ctx.lineWidth = 1;
-    
-    for (let col = 0; col <= this.gridCols; col++) {
-      const x = this.gridOffsetX + col * this.cellSize;
-      this.ctx.beginPath();
-      this.ctx.moveTo(x, this.gridOffsetY);
-      this.ctx.lineTo(x, this.gridOffsetY + this.gridHeight);
-      this.ctx.stroke();
+    // Grid com padrão de tabuleiro (checkered pattern como Google Snake)
+    for (let col = 0; col < this.gridCols; col++) {
+      for (let row = 0; row < this.gridRows; row++) {
+        const isLightSquare = (col + row) % 2 === 0;
+        this.ctx.fillStyle = isLightSquare ? this.GRID_LIGHT : this.GRID_DARK;
+        
+        const x = this.gridOffsetX + col * this.cellSize;
+        const y = this.gridOffsetY + row * this.cellSize;
+        
+        this.ctx.fillRect(x, y, this.cellSize, this.cellSize);
+      }
     }
     
-    for (let row = 0; row <= this.gridRows; row++) {
-      const y = this.gridOffsetY + row * this.cellSize;
-      this.ctx.beginPath();
-      this.ctx.moveTo(this.gridOffsetX, y);
-      this.ctx.lineTo(this.gridOffsetX + this.gridWidth, y);
-      this.ctx.stroke();
-    }
+    // Borda do grid
+    this.ctx.strokeStyle = '#0D5A3E';
+    this.ctx.lineWidth = 3;
+    this.ctx.strokeRect(
+      this.gridOffsetX - 1.5, 
+      this.gridOffsetY - 1.5, 
+      this.gridWidth + 3, 
+      this.gridHeight + 3
+    );
     
-    this.ctx.fillStyle = '#27272A';
+    // HUD com estilo Google
+    this.ctx.fillStyle = this.HUD_BACKGROUND;
     this.ctx.fillRect(0, 0, this.canvas.width, this.HUD_HEIGHT);
     
-    this.ctx.strokeStyle = '#A0400B';
+    // Linha separadora do HUD
+    this.ctx.strokeStyle = '#DADCE0';
     this.ctx.lineWidth = 2;
     this.ctx.beginPath();
     this.ctx.moveTo(0, this.HUD_HEIGHT);
     this.ctx.lineTo(this.canvas.width, this.HUD_HEIGHT);
     this.ctx.stroke();
     
+    // Barra de calorias com estilo moderno
     const barWidth = 300;
-    const barHeight = 14;
+    const barHeight = 20;
     const barX = this.canvas.width / 2 - barWidth / 2;
-    const barY = 15;
+    const barY = 12;
     
-    this.ctx.fillStyle = '#2D2D30';
+    // Fundo da barra
+    this.ctx.fillStyle = '#E8EAED';
     this.ctx.beginPath();
-    this.ctx.roundRect(barX, barY, barWidth, barHeight, 7);
+    this.ctx.roundRect(barX, barY, barWidth, barHeight, 10);
     this.ctx.fill();
     
+    // Barra de progresso colorida (gradiente do verde ao vermelho)
     const proportion = Math.max(0, Math.min(1, calories / this.MAX_CALORIES));
     if (proportion > 0) {
-      this.ctx.fillStyle = '#F97316';
+      // Cor da barra baseada no nível de calorias
+      let barColor = '#34A853'; // Verde (baixo)
+      if (proportion > 0.7) {
+        barColor = '#EA4335'; // Vermelho (alto)
+      } else if (proportion > 0.4) {
+        barColor = '#FBBC04'; // Amarelo (médio)
+      }
+      
+      this.ctx.fillStyle = barColor;
       this.ctx.beginPath();
-      this.ctx.roundRect(barX, barY, barWidth * proportion, barHeight, 7);
+      this.ctx.roundRect(barX, barY, barWidth * proportion, barHeight, 10);
       this.ctx.fill();
     }
     
-    this.ctx.fillStyle = '#FAFAF9';
-    this.ctx.font = 'bold 18px Arial';
+    // Borda da barra
+    this.ctx.strokeStyle = '#DADCE0';
+    this.ctx.lineWidth = 2;
+    this.ctx.beginPath();
+    this.ctx.roundRect(barX, barY, barWidth, barHeight, 10);
+    this.ctx.stroke();
+    
+    // Texto de calorias
+    this.ctx.fillStyle = this.HUD_TEXT;
+    this.ctx.font = 'bold 16px "Google Sans", Arial, sans-serif';
     const calText = `${Math.round(calories)}/${this.MAX_CALORIES} kcal`;
     const calTextWidth = this.ctx.measureText(calText).width;
-    this.ctx.fillText(calText, this.canvas.width / 2 - calTextWidth / 2, barY + barHeight + 18);
+    this.ctx.fillText(calText, this.canvas.width / 2 - calTextWidth / 2, barY + barHeight + 20);
     
-    this.ctx.fillStyle = '#FAFAF9';
-    this.ctx.font = 'bold 26px Arial';
+    // Timer com estilo Google
+    this.ctx.fillStyle = this.HUD_TEXT;
+    this.ctx.font = 'bold 24px "Google Sans", Arial, sans-serif';
     const timeText = `⏱️ ${Math.ceil(this.timeRemaining)}s`;
-    this.ctx.fillText(timeText, 15, 35);
+    this.ctx.fillText(timeText, 20, 38);
     
-    this.ctx.font = 'bold 18px Arial';
+    // Dia com estilo Google
+    this.ctx.font = 'bold 16px "Google Sans", Arial, sans-serif';
     const dayText = `Dia ${this.gameState.day}`;
     const dayTextWidth = this.ctx.measureText(dayText).width;
-    this.ctx.fillText(dayText, this.canvas.width - dayTextWidth - 15, 35);
+    this.ctx.fillText(dayText, this.canvas.width - dayTextWidth - 20, 38);
     
-    this.snake.forEach((segment, index) => {
-      if (index === 0) {
-        if (this.snakeHeadImage && this.snakeHeadImage.complete) {
-          this.ctx.save();
-          this.ctx.translate(segment.x + this.cellSize / 2, segment.y + this.cellSize / 2);
-          
-          if (this.direction.x === 1) this.ctx.rotate(0);
-          else if (this.direction.x === -1) this.ctx.rotate(Math.PI);
-          else if (this.direction.y === -1) this.ctx.rotate(-Math.PI / 2);
-          else if (this.direction.y === 1) this.ctx.rotate(Math.PI / 2);
-          
-          this.ctx.drawImage(
-            this.snakeHeadImage,
-            -this.cellSize / 2,
-            -this.cellSize / 2,
-            this.cellSize,
-            this.cellSize
-          );
-          this.ctx.restore();
-        } else {
-          this.ctx.fillStyle = '#BE4B00';
-          this.ctx.beginPath();
-          this.ctx.roundRect(segment.x, segment.y, this.cellSize - 2, this.cellSize - 2, 6);
-          this.ctx.fill();
-          
-          this.ctx.fillStyle = '#000000';
-          const eyeSize = Math.max(2, Math.floor(this.cellSize / 7));
-          const eyeOffset = Math.floor(this.cellSize * 0.6);
-          const eyeMargin = Math.floor(this.cellSize * 0.2);
-          
-          if (this.direction.x === 1) {
-            this.ctx.fillRect(segment.x + eyeOffset, segment.y + eyeMargin, eyeSize, eyeSize);
-            this.ctx.fillRect(segment.x + eyeOffset, segment.y + eyeOffset, eyeSize, eyeSize);
-          } else if (this.direction.x === -1) {
-            this.ctx.fillRect(segment.x + eyeMargin, segment.y + eyeMargin, eyeSize, eyeSize);
-            this.ctx.fillRect(segment.x + eyeMargin, segment.y + eyeOffset, eyeSize, eyeSize);
-          } else if (this.direction.y === -1) {
-            this.ctx.fillRect(segment.x + eyeMargin, segment.y + eyeMargin, eyeSize, eyeSize);
-            this.ctx.fillRect(segment.x + eyeOffset, segment.y + eyeMargin, eyeSize, eyeSize);
-          } else if (this.direction.y === 1) {
-            this.ctx.fillRect(segment.x + eyeMargin, segment.y + eyeOffset, eyeSize, eyeSize);
-            this.ctx.fillRect(segment.x + eyeOffset, segment.y + eyeOffset, eyeSize, eyeSize);
-          }
-        }
-      } else {
-        this.ctx.fillStyle = '#A0400B';
-        this.ctx.beginPath();
-        this.ctx.roundRect(segment.x + 1, segment.y + 1, this.cellSize - 4, this.cellSize - 4, 4);
-        this.ctx.fill();
-      }
-    });
-    
+    // Desenhar comida com sombra e destaque
     if (this.currentFood) {
       const foodSprite = this.foodImages.get(this.currentFood.name);
+      
+      // Sombra da comida
+      this.ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+      this.ctx.beginPath();
+      this.ctx.arc(
+        this.currentFood.x + this.cellSize / 2,
+        this.currentFood.y + this.cellSize / 2 + 2,
+        this.cellSize / 2,
+        0,
+        Math.PI * 2
+      );
+      this.ctx.fill();
       
       if (foodSprite && foodSprite.complete) {
         this.ctx.drawImage(
@@ -519,34 +521,211 @@ export class SnakeGame {
         const color = this.getFoodColor(this.currentFood.health_color);
         this.ctx.fillStyle = color;
         this.ctx.beginPath();
-        this.ctx.roundRect(this.currentFood.x, this.currentFood.y, this.cellSize, this.cellSize, 4);
+        this.ctx.arc(
+          this.currentFood.x + this.cellSize / 2,
+          this.currentFood.y + this.cellSize / 2,
+          this.cellSize / 2 - 2,
+          0,
+          Math.PI * 2
+        );
         this.ctx.fill();
         
-        this.ctx.strokeStyle = '#FAFAF9';
-        this.ctx.lineWidth = 1;
-        this.ctx.strokeRect(this.currentFood.x, this.currentFood.y, this.cellSize, this.cellSize);
+        // Borda branca
+        this.ctx.strokeStyle = '#FFFFFF';
+        this.ctx.lineWidth = 2;
+        this.ctx.stroke();
+        
+        // Brilho
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+        this.ctx.beginPath();
+        this.ctx.arc(
+          this.currentFood.x + this.cellSize / 3,
+          this.currentFood.y + this.cellSize / 3,
+          this.cellSize / 6,
+          0,
+          Math.PI * 2
+        );
+        this.ctx.fill();
       }
       
+      // Label de calorias com fundo
       const calText = `${this.currentFood.calories} cal`;
-      this.ctx.font = 'bold 10px Arial';
-      this.ctx.fillStyle = '#FAFAF9';
-      this.ctx.strokeStyle = '#18181B';
-      this.ctx.lineWidth = 3;
-      this.ctx.strokeText(calText, this.currentFood.x + 2, this.currentFood.y + this.cellSize + 12);
-      this.ctx.fillText(calText, this.currentFood.x + 2, this.currentFood.y + this.cellSize + 12);
+      this.ctx.font = 'bold 11px "Google Sans", Arial, sans-serif';
+      const textWidth = this.ctx.measureText(calText).width;
+      
+      // Fundo do label
+      this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+      this.ctx.beginPath();
+      this.ctx.roundRect(
+        this.currentFood.x + this.cellSize / 2 - textWidth / 2 - 4,
+        this.currentFood.y + this.cellSize + 2,
+        textWidth + 8,
+        16,
+        4
+      );
+      this.ctx.fill();
+      
+      // Texto
+      this.ctx.fillStyle = '#FFFFFF';
+      this.ctx.fillText(
+        calText,
+        this.currentFood.x + this.cellSize / 2 - textWidth / 2,
+        this.currentFood.y + this.cellSize + 13
+      );
     }
     
-    this.ctx.fillStyle = 'rgba(250, 250, 249, 0.5)';
-    this.ctx.font = '12px Arial';
-    this.ctx.fillText('Use as setas (↑↓←→) para controlar a cobra', 10, this.canvas.height - 10);
+    // Desenhar cobra com estilo moderno
+    this.snake.forEach((segment, index) => {
+      if (index === 0) {
+        // Cabeça da cobra (0.9x do tamanho da célula, centrada)
+        const headSize = this.cellSize * 0.9;
+        const headOffset = (this.cellSize - headSize) / 2;
+        
+        if (this.snakeHeadImage && this.snakeHeadImage.complete) {
+          this.ctx.save();
+          this.ctx.translate(segment.x + this.cellSize / 2, segment.y + this.cellSize / 2);
+          
+          if (this.direction.x === 1) this.ctx.rotate(0);
+          else if (this.direction.x === -1) this.ctx.rotate(Math.PI);
+          else if (this.direction.y === -1) this.ctx.rotate(-Math.PI / 2);
+          else if (this.direction.y === 1) this.ctx.rotate(Math.PI / 2);
+          
+          this.ctx.drawImage(
+            this.snakeHeadImage,
+            -headSize / 2,
+            -headSize / 2,
+            headSize,
+            headSize
+          );
+          this.ctx.restore();
+        } else {
+          // Cabeça laranja vibrante
+          this.ctx.fillStyle = this.SNAKE_HEAD_COLOR;
+          this.ctx.beginPath();
+          this.ctx.roundRect(segment.x + headOffset, segment.y + headOffset, headSize, headSize, 6);
+          this.ctx.fill();
+          
+          // Olhos brancos (ajustados para o novo tamanho)
+          this.ctx.fillStyle = '#FFFFFF';
+          const eyeSize = Math.max(3, Math.floor(headSize / 6));
+          const eyeOffsetFromEdge = headSize * 0.65;
+          const eyeMarginFromEdge = headSize * 0.25;
+          
+          if (this.direction.x === 1) {
+            this.ctx.beginPath();
+            this.ctx.arc(segment.x + headOffset + eyeOffsetFromEdge, segment.y + headOffset + eyeMarginFromEdge, eyeSize, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.beginPath();
+            this.ctx.arc(segment.x + headOffset + eyeOffsetFromEdge, segment.y + headOffset + eyeOffsetFromEdge, eyeSize, 0, Math.PI * 2);
+            this.ctx.fill();
+          } else if (this.direction.x === -1) {
+            this.ctx.beginPath();
+            this.ctx.arc(segment.x + headOffset + eyeMarginFromEdge, segment.y + headOffset + eyeMarginFromEdge, eyeSize, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.beginPath();
+            this.ctx.arc(segment.x + headOffset + eyeMarginFromEdge, segment.y + headOffset + eyeOffsetFromEdge, eyeSize, 0, Math.PI * 2);
+            this.ctx.fill();
+          } else if (this.direction.y === -1) {
+            this.ctx.beginPath();
+            this.ctx.arc(segment.x + headOffset + eyeMarginFromEdge, segment.y + headOffset + eyeMarginFromEdge, eyeSize, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.beginPath();
+            this.ctx.arc(segment.x + headOffset + eyeOffsetFromEdge, segment.y + headOffset + eyeMarginFromEdge, eyeSize, 0, Math.PI * 2);
+            this.ctx.fill();
+          } else if (this.direction.y === 1) {
+            this.ctx.beginPath();
+            this.ctx.arc(segment.x + headOffset + eyeMarginFromEdge, segment.y + headOffset + eyeOffsetFromEdge, eyeSize, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.beginPath();
+            this.ctx.arc(segment.x + headOffset + eyeOffsetFromEdge, segment.y + headOffset + eyeOffsetFromEdge, eyeSize, 0, Math.PI * 2);
+            this.ctx.fill();
+          }
+          
+          // Pupilas pretas (ajustadas para o novo tamanho)
+          this.ctx.fillStyle = '#202124';
+          const pupilSize = Math.max(1, Math.floor(eyeSize / 2));
+          
+          if (this.direction.x === 1) {
+            this.ctx.beginPath();
+            this.ctx.arc(segment.x + headOffset + eyeOffsetFromEdge, segment.y + headOffset + eyeMarginFromEdge, pupilSize, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.beginPath();
+            this.ctx.arc(segment.x + headOffset + eyeOffsetFromEdge, segment.y + headOffset + eyeOffsetFromEdge, pupilSize, 0, Math.PI * 2);
+            this.ctx.fill();
+          } else if (this.direction.x === -1) {
+            this.ctx.beginPath();
+            this.ctx.arc(segment.x + headOffset + eyeMarginFromEdge, segment.y + headOffset + eyeMarginFromEdge, pupilSize, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.beginPath();
+            this.ctx.arc(segment.x + headOffset + eyeMarginFromEdge, segment.y + headOffset + eyeOffsetFromEdge, pupilSize, 0, Math.PI * 2);
+            this.ctx.fill();
+          } else if (this.direction.y === -1) {
+            this.ctx.beginPath();
+            this.ctx.arc(segment.x + headOffset + eyeMarginFromEdge, segment.y + headOffset + eyeMarginFromEdge, pupilSize, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.beginPath();
+            this.ctx.arc(segment.x + headOffset + eyeOffsetFromEdge, segment.y + headOffset + eyeMarginFromEdge, pupilSize, 0, Math.PI * 2);
+            this.ctx.fill();
+          } else if (this.direction.y === 1) {
+            this.ctx.beginPath();
+            this.ctx.arc(segment.x + headOffset + eyeMarginFromEdge, segment.y + headOffset + eyeOffsetFromEdge, pupilSize, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.beginPath();
+            this.ctx.arc(segment.x + headOffset + eyeOffsetFromEdge, segment.y + headOffset + eyeOffsetFromEdge, pupilSize, 0, Math.PI * 2);
+            this.ctx.fill();
+          }
+        }
+      } else {
+        // Corpo da cobra com gradiente sutil
+        const segmentAlpha = 1 - (index / this.snake.length) * 0.3;
+        this.ctx.fillStyle = this.SNAKE_BODY_COLOR;
+        this.ctx.globalAlpha = segmentAlpha;
+        this.ctx.beginPath();
+        this.ctx.roundRect(segment.x + 2, segment.y + 2, this.cellSize - 4, this.cellSize - 4, 5);
+        this.ctx.fill();
+        this.ctx.globalAlpha = 1;
+        
+        // Destaque no corpo
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        this.ctx.beginPath();
+        this.ctx.roundRect(segment.x + 3, segment.y + 3, this.cellSize - 10, this.cellSize - 10, 3);
+        this.ctx.fill();
+      }
+    });
+    
+    // Instruções com estilo moderno
+    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    this.ctx.font = '13px "Google Sans", Arial, sans-serif';
+    const instructionText = 'Use as setas ↑ ↓ ← → para controlar a cobra';
+    const instructionWidth = this.ctx.measureText(instructionText).width;
+    
+    // Fundo semi-transparente
+    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    this.ctx.beginPath();
+    this.ctx.roundRect(
+      this.canvas.width / 2 - instructionWidth / 2 - 8,
+      this.canvas.height - 26,
+      instructionWidth + 16,
+      20,
+      10
+    );
+    this.ctx.fill();
+    
+    // Texto das instruções
+    this.ctx.fillStyle = '#FFFFFF';
+    this.ctx.fillText(
+      instructionText,
+      this.canvas.width / 2 - instructionWidth / 2,
+      this.canvas.height - 12
+    );
   }
   
   private getFoodColor(healthColor: string): string {
     switch (healthColor) {
-      case 'green': return '#2ECC71';
-      case 'yellow': return '#F1C40F';
-      case 'orange': return '#E67E22';
-      default: return '#95A5A6';
+      case 'green': return '#34A853'; // Verde Google
+      case 'yellow': return '#FBBC04'; // Amarelo Google
+      case 'orange': return '#FF6D00'; // Laranja vibrante
+      default: return '#9AA0A6'; // Cinza Google
     }
   }
   

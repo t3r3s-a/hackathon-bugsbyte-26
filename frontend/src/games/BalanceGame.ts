@@ -54,9 +54,9 @@ export class BalanceGame extends GameBase {
 
   protected async loadAssets(): Promise<void> {
     try {
-      this.assets.snakeHead = await this.loadImage('/assets/cabeca_snake.png');
-      this.assets.background = await this.loadImage('/assets/background_equilibrio.png');
-      this.assets.ground = await this.loadImage('/assets/chao_equilibrio.png');
+      this.assets.snakeHead = await this.loadImage('/src/assets/games/cabeca_snake.png');
+      this.assets.background = await this.loadImage('/src/assets/games/background_equilibrio.png');
+      this.assets.ground = await this.loadImage('/src/assets/games/chao_equilibrio.png');
     } catch (error) {
       console.warn('Algumas imagens não foram carregadas, usando gráficos simples');
     }

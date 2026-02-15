@@ -220,12 +220,14 @@ const handleImageError = (event: Event) => {
 
 <style scoped>
 .food-catalog {
+  background-color: #f8f9fa;
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
 }
 
 .catalog-header {
+  background-color: #f8f9fa;
   text-align: center;
   margin-bottom: 30px;
 }

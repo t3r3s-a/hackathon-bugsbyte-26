@@ -396,7 +396,8 @@ const startTraining = async (trainingType: string) => {
     targetCalories: 1500,
     difficulty: 1,
     canvasWidth: 800,
-    canvasHeight: 600
+    canvasHeight: 600,
+    calories: gameState.value.calories  // IMPORTANTE: Passar calorias atuais para o treino!
   }
 
   // Limpar jogo anterior
@@ -826,7 +827,7 @@ canvas {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(255,255,255,0.1);
+  background: rgba(255,255,255,1);
   border-radius: 12px;
   padding: 10px 20px;
 }

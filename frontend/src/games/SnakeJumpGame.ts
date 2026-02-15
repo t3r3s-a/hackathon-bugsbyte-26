@@ -10,27 +10,73 @@ interface Obstacle {
   height: number;
 }
 
+interface TailSegment {
+  y: number;
+  velocityY: number;
+}
+
 export class SnakeJumpGame extends GameBase {
   private readonly GROUND_Y: number;
-  private readonly GRAVITY = 1.2;
-  private readonly JUMP_FORCE = -18;
-  private readonly OBSTACLE_SPEED = 7;
+  private readonly GRAVITY = 0.8;
+  private readonly JUMP_FORCE = -16; // Aumentado de -12 para -16 (salto mais alto)
+  private readonly OBSTACLE_SPEED = 6;
   private readonly GROUND_HEIGHT = 80;
-  private readonly RUNNER_SIZE = 30;
+  private readonly RUNNER_SIZE = 30; // Aumentado de 20 para 30
+  private readonly HEAD_X = 150; // Posição fixa X da cabeça
 
-  private runnerY: number;
-  private runnerVelocityY: number = 0;
-  private isOnGround: boolean = true;
+  // Cabeça
+  private headY: number;
+  private headVelocityY: number = 0;
+  private headOnGround: boolean = true;
+
+  // Cauda (segmentos atrás da cabeça)
+  private tailSegments: TailSegment[] = [];
+  private numSegments: number = 3; // Baseado nas calorias ATUAIS
+  private readonly SEGMENT_DISTANCE = 40; // Aumentado de 30 para 40 (mais espaçamento)
+  private readonly DELAY_FRAMES: number;
+
+  // Buffer de inputs para a cauda seguir
+  private inputBuffer: boolean[] = [];
+  private readonly MAX_BUFFER: number;
+
+  // Calorias atuais
+  private currentCalories: number = 300;
+  private readonly CALORIES_PER_SECOND = 5;
+
+  // Cores
+  private readonly SNAKE_HEAD_COLOR = '#FF8C00'; // Laranja escuro (cabeça)
+  private readonly SNAKE_BODY_COLOR = '#FFA500'; // Laranja (corpo)
+
   private obstacles: Obstacle[] = [];
   private spawnTimer: number = 0;
-  private readonly SPAWN_INTERVAL = 80; // Frames entre obstáculos
+  private readonly SPAWN_INTERVAL = 90; // Frames entre obstáculos
   private score: number = 0;
 
   constructor(canvas: HTMLCanvasElement, config: GameConfig) {
     super(canvas, config);
     this.GROUND_Y = this.canvas.height - this.GROUND_HEIGHT - this.RUNNER_SIZE;
-    this.runnerY = this.GROUND_Y;
-    this.timeRemaining = 30; // 30 segundos para sobreviver
+    this.headY = this.GROUND_Y;
+    this.timeRemaining = 20; // 20 segundos como no Python
+    
+    // Calorias iniciais
+    this.currentCalories = config.calories || 300;
+    
+    // Calcular número de segmentos baseado nas calorias INICIAIS
+    this.numSegments = Math.max(1, Math.floor(this.currentCalories / 100));
+    
+    // Calcular delay entre segmentos (quanto tempo leva para um segmento percorrer a distância)
+    this.DELAY_FRAMES = Math.max(1, Math.floor(this.SEGMENT_DISTANCE / this.OBSTACLE_SPEED));
+    
+    // Tamanho máximo do buffer
+    this.MAX_BUFFER = 30 * this.DELAY_FRAMES + 20; // Buffer grande o suficiente para 30 segmentos
+    
+    // Inicializar segmentos da cauda
+    for (let i = 0; i < this.numSegments; i++) {
+      this.tailSegments.push({
+        y: this.GROUND_Y,
+        velocityY: 0
+      });
+    }
   }
 
   protected async loadAssets(): Promise<void> {
@@ -47,22 +93,47 @@ export class SnakeJumpGame extends GameBase {
     super.handleKeyDown(e);
     
     // Saltar com espaço ou seta para cima
-    if ((e.key === ' ' || e.key === 'ArrowUp') && this.isOnGround) {
-      this.runnerVelocityY = this.JUMP_FORCE;
-      this.isOnGround = false;
+    if ((e.key === ' ' || e.key === 'ArrowUp') && this.headOnGround) {
+      this.headVelocityY = this.JUMP_FORCE;
+      this.headOnGround = false;
     }
   }
 
   protected update(deltaTime: number): void {
-    // Física do corredor
-    this.runnerVelocityY += this.GRAVITY;
-    this.runnerY += this.runnerVelocityY;
+    // Física da cabeça
+    this.headVelocityY += this.GRAVITY;
+    this.headY += this.headVelocityY;
 
     // Verificar se está no chão
-    if (this.runnerY >= this.GROUND_Y) {
-      this.runnerY = this.GROUND_Y;
-      this.runnerVelocityY = 0;
-      this.isOnGround = true;
+    if (this.headY >= this.GROUND_Y) {
+      this.headY = this.GROUND_Y;
+      this.headVelocityY = 0;
+      this.headOnGround = true;
+    }
+
+    // Atualizar buffer de inputs
+    this.inputBuffer.unshift(!this.headOnGround);
+    if (this.inputBuffer.length > this.MAX_BUFFER) {
+      this.inputBuffer.pop();
+    }
+
+    // Atualizar segmentos da cauda
+    for (let i = 0; i < this.tailSegments.length; i++) {
+      const segment = this.tailSegments[i];
+      const bufferIndex = (i + 1) * this.DELAY_FRAMES;
+      const shouldJump = this.inputBuffer[bufferIndex] || false;
+
+      if (shouldJump && segment.y >= this.GROUND_Y) {
+        segment.velocityY = this.JUMP_FORCE;
+      }
+
+      segment.velocityY += this.GRAVITY;
+      segment.y += segment.velocityY;
+
+      if (segment.y >= this.GROUND_Y) {
+        segment.y = this.GROUND_Y;
+        segment.velocityY = 0;
+      }
     }
 
     // Spawnar obstáculos
@@ -85,6 +156,29 @@ export class SnakeJumpGame extends GameBase {
       }
       return true;
     });
+
+    // Reduzir calorias ao longo do tempo
+    this.currentCalories -= this.CALORIES_PER_SECOND * (deltaTime / 1000);
+    this.currentCalories = Math.max(0, this.currentCalories);
+
+    // Atualizar número de segmentos baseado nas calorias atuais
+    const newNumSegments = Math.max(1, Math.floor(this.currentCalories / 100));
+    if (newNumSegments !== this.numSegments) {
+      if (newNumSegments > this.numSegments) {
+        // Adicionar novos segmentos quando calorias aumentam
+        const segmentsToAdd = newNumSegments - this.numSegments;
+        for (let i = 0; i < segmentsToAdd; i++) {
+          this.tailSegments.push({
+            y: this.GROUND_Y,
+            velocityY: 0
+          });
+        }
+      } else {
+        // Remover segmentos quando calorias diminuem
+        this.tailSegments = this.tailSegments.slice(0, newNumSegments);
+      }
+      this.numSegments = newNumSegments;
+    }
   }
 
   protected render(): void {
@@ -118,12 +212,11 @@ export class SnakeJumpGame extends GameBase {
       this.ctx.fillStyle = '#DC2626';
     }
 
-    // Desenhar corredor (cobra)
-    const runnerX = 100;
+    // Desenhar cabeça (cobra)
     if (this.assets.runner) {
       this.ctx.save();
-      this.ctx.translate(runnerX + this.RUNNER_SIZE / 2, this.runnerY + this.RUNNER_SIZE / 2);
-      this.ctx.rotate(-Math.PI / 2); // Virado para direita
+      this.ctx.translate(this.HEAD_X + this.RUNNER_SIZE / 2, this.headY + this.RUNNER_SIZE / 2);
+      this.ctx.rotate(Math.PI / 2); // Girado 180º: de -Math.PI/2 para +Math.PI/2 (virada para a esquerda)
       this.ctx.drawImage(
         this.assets.runner,
         -this.RUNNER_SIZE / 2,
@@ -133,11 +226,19 @@ export class SnakeJumpGame extends GameBase {
       );
       this.ctx.restore();
     } else {
-      this.drawRect(runnerX, this.runnerY, this.RUNNER_SIZE, this.RUNNER_SIZE, '#FFD700');
+      this.drawRect(this.HEAD_X, this.headY, this.RUNNER_SIZE, this.RUNNER_SIZE, this.SNAKE_HEAD_COLOR);
       // Olhos
       this.ctx.fillStyle = '#000000';
-      this.ctx.fillRect(runnerX + 20, this.runnerY + 8, 4, 4);
-      this.ctx.fillRect(runnerX + 20, this.runnerY + 18, 4, 4);
+      this.ctx.fillRect(this.HEAD_X + 14, this.headY + 6, 4, 4);
+      this.ctx.fillRect(this.HEAD_X + 14, this.headY + 14, 4, 4);
+    }
+
+    // Desenhar segmentos da cauda
+    for (let i = 0; i < this.tailSegments.length; i++) {
+      const segment = this.tailSegments[i];
+      const segmentX = this.HEAD_X - (i + 1) * this.SEGMENT_DISTANCE;
+
+      this.drawRect(segmentX, segment.y, this.RUNNER_SIZE, this.RUNNER_SIZE, this.SNAKE_BODY_COLOR);
     }
 
     // UI
@@ -147,13 +248,7 @@ export class SnakeJumpGame extends GameBase {
   private renderUI(): void {
     const padding = 20;
 
-    // Score
-    this.ctx.fillStyle = '#2C3E50';
-    this.ctx.font = 'bold 24px Arial';
-    this.ctx.fillText(`Score: ${this.score}`, padding, 40);
 
-    // Tempo restante
-    this.ctx.fillText(`Tempo: ${Math.ceil(this.timeRemaining)}s`, padding, 70);
 
     // Instruções
     this.ctx.fillStyle = '#7F8C8D';
@@ -163,16 +258,15 @@ export class SnakeJumpGame extends GameBase {
 
   protected checkGameEnd(): boolean {
     // Verificar colisão com obstáculos
-    const runnerX = 100;
-    const runnerRect = {
-      x: runnerX,
-      y: this.runnerY,
+    const headRect = {
+      x: this.HEAD_X,
+      y: this.headY,
       width: this.RUNNER_SIZE,
       height: this.RUNNER_SIZE
     };
 
     for (const obstacle of this.obstacles) {
-      if (this.checkCollision(runnerRect, obstacle)) {
+      if (this.checkCollision(headRect, obstacle)) {
         return true; // Game over
       }
     }
@@ -193,13 +287,13 @@ export class SnakeJumpGame extends GameBase {
   }
 
   private spawnObstacle(): void {
-    const height = 30 + Math.floor(Math.random() * 40); // 30-70px
+    const height = 40 + Math.floor(Math.random() * 60); // Aumentado de 30-70px para 40-100px
     const groundY = this.canvas.height - this.GROUND_HEIGHT;
     
     this.obstacles.push({
       x: this.canvas.width,
       y: groundY - height,
-      width: 25,
+      width: 35, // Aumentado de 25 para 35
       height: height
     });
   }
