@@ -19,4 +19,8 @@ async def baixar_plano(username: str):
         content=pdf_bytes,
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename=Plano_{username}.pdf"}
+<<<<<<< HEAD
     )
+=======
+    )
+>>>>>>> 2af5b519843d395544f3339b40dae4163a401e25

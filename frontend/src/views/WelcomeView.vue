@@ -33,7 +33,7 @@ const baixarPlano = async () => {
   }
 };
 
-const irParaJogo = () => router.push('/games'); // Alterado de '/jogo' para '/games'
+const irParaJogo = () => router.push('/games');
 const irParaChat = () => router.push('/chat'); // Confirma se tens esta rota
 </script>
 

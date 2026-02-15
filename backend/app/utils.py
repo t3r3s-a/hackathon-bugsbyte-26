@@ -37,4 +37,8 @@ def get_user_by_username(username: str):
         if user.get("username") == username:
             return user
             
+<<<<<<< HEAD
     return None
+=======
+    return None
+>>>>>>> 2af5b519843d395544f3339b40dae4163a401e25
