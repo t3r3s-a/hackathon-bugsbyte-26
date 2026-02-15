@@ -7,6 +7,7 @@ from app.schemas import DadosUsuario
 from app.data.alergias import alergia as LISTA_ALERGIAS_OFICIAL
 
 router = APIRouter()
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DB_FILE = os.path.join(BASE_DIR, "database.json")
 
