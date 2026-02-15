@@ -29,35 +29,38 @@ class Jogo:
             self.calorias -= ganho
 
 
-if __name__ == "__main__":
-    # Escolha do minijogo
-    print("Escolha o minigame:")
-    print("1 - Dinossauro")
-    print("2 - Equilíbrio")
-    opcao = input("Digite 1 ou 2: ").strip()
+            if __name__ == "__main__":
+                # Escolha do minijogo
+                print("Escolha o minigame:")
+                print("1 - Dinossauro")
+                print("2 - Equilíbrio")
+                print("3 - Corrida")
+                opcao = input("Digite 1, 2 ou 3: ").strip()
 
-    if opcao == "1":
-        nome_modulo = "MiniJogos.dinossauro"
-    elif opcao == "2":
-        nome_modulo = "MiniJogos.equilibrio"
-    else:
-        print("Opção inválida.")
-        exit()
+                if opcao == "1":
+                    nome_modulo = "MiniJogos.dinossauro"
+                elif opcao == "2":
+                    nome_modulo = "MiniJogos.equilibrio"
+                elif opcao == "3":
+                    nome_modulo = "MiniJogos.corrida"
+                else:
+                    print("Opção inválida.")
+                    exit()
 
-    try:
-        modulo = importlib.import_module(nome_modulo)
-    except ModuleNotFoundError:
-        print(f"Erro: Não foi possível importar o módulo '{nome_modulo}'.")
-        print("Certifique-se de que a pasta 'MiniJogos' existe e contém um ficheiro '__init__.py' (pode estar vazio).")
-        exit()
+                try:
+                    modulo = importlib.import_module(nome_modulo)
+                except ModuleNotFoundError:
+                    print(f"Erro: Não foi possível importar o módulo '{nome_modulo}'.")
+                    print("Certifique-se de que a pasta 'MiniJogos' existe e contém um ficheiro '__init__.py' (pode estar vazio).")
+                    exit()
 
-    calorias_iniciais = 1000
-    jogo = Jogo(calorias_iniciais)
+                calorias_iniciais = 1000
+                jogo = Jogo(calorias_iniciais)
 
-    print("Calorias iniciais:", jogo.calorias)
+                print("Calorias iniciais:", jogo.calorias)
 
-    try:
-        jogo.jogar(modulo)
-        print("Calorias após jogar:", jogo.calorias)
-    except Exception as e:
-        print("Erro ao jogar:", e)
+                try:
+                    jogo.jogar(modulo)
+                    print("Calorias após jogar:", jogo.calorias)
+                except Exception as e:
+                    print("Erro ao jogar:", e)
